@@ -60,23 +60,28 @@ get_check_dev() {
     echo "$_udevinfo" | grep "DEVNAME=" | sed 's/DEVNAME=//'
 }
 
-# Find the right device to run check on
-check_dev=$(get_check_dev "$livedev")
-# CD/DVD media check
-[ -b "$check_dev" ] && fs=$(det_fs "$check_dev")
-if [ "$fs" = "iso9660" -o "$fs" = "udf" ]; then
-    check="yes"
-fi
-getarg rd.live.check || check=""
-if [ -n "$check" ]; then
-    type plymouth > /dev/null 2>&1 && plymouth --hide-splash
-    p=$(dev_unit_name "$check_dev")
-    systemctl start checkisomd5@"${p}".service
-    if [ $? -eq 1 ]; then
-        die "CD check failed!"
-        exit 1
+# Check ISO checksum only if we have a path to a block device (or just its name
+# without '/dev'). In other words, in this context, we perform the check only
+# if the given $livedev is not a filesystem file image.
+if [ ! -f "$livedev" ]; then
+    # Find the right device to run check on
+    check_dev=$(get_check_dev "$livedev")
+    # CD/DVD media check
+    [ -b "$check_dev" ] && fs=$(det_fs "$check_dev")
+    if [ "$fs" = "iso9660" -o "$fs" = "udf" ]; then
+        check="yes"
     fi
-    type plymouth > /dev/null 2>&1 && plymouth --show-splash
+    getarg rd.live.check || check=""
+    if [ -n "$check" ]; then
+        type plymouth > /dev/null 2>&1 && plymouth --hide-splash
+        p=$(dev_unit_name "$check_dev")
+        systemctl start checkisomd5@"${p}".service
+        if [ $? -eq 1 ]; then
+            die "CD check failed!"
+            exit 1
+        fi
+        type plymouth > /dev/null 2>&1 && plymouth --show-splash
+    fi
 fi
 
 ln -s "$livedev" /run/initramfs/livedev
