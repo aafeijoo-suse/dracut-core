@@ -1144,3 +1144,94 @@ label_uuid_to_dev() {
             ;;
     esac
 }
+
+# get_machine_id
+get_machine_id() {
+    local _machine_id
+
+    if [[ -d /efi/Default ]] || [[ -d /boot/Default ]] || [[ -d /boot/efi/Default ]]; then
+        _machine_id="Default"
+    elif [[ -s /etc/machine-id ]]; then
+        read -r _machine_id < /etc/machine-id
+        [[ $_machine_id == "uninitialized" ]] && _machine_id="Default"
+    else
+        _machine_id="Default"
+    fi
+
+    echo -n "$_machine_id"
+}
+
+# get_default_initramfs_image [<kernel_version>]
+get_default_initramfs_image() {
+    local _kver="$1"
+    local _machine_id
+    local _image
+
+    [[ $_kver ]] || _kver="$(uname -r)"
+    _machine_id="$(get_machine_id)"
+
+    if [[ -d /efi/loader/entries || -L /efi/loader/entries ]] \
+        && [[ $_machine_id ]] \
+        && [[ -d /efi/${_machine_id} || -L /efi/${_machine_id} ]]; then
+        _image="/efi/${_machine_id}/${_kver}/initrd"
+    elif [[ -d /boot/loader/entries || -L /boot/loader/entries ]] \
+        && [[ $_machine_id ]] \
+        && [[ -d /boot/${_machine_id} || -L /boot/${_machine_id} ]]; then
+        _image="/boot/${_machine_id}/${_kver}/initrd"
+    elif [[ -d /boot/efi/loader/entries || -L /boot/efi/loader/entries ]] \
+        && [[ $_machine_id ]] \
+        && [[ -d /boot/efi/${_machine_id} || -L /boot/efi/${_machine_id} ]]; then
+        _image="/boot/efi/${_machine_id}/${_kver}/initrd"
+    elif [[ -f /boot/initrd-${_kver} ]]; then
+        _image="/boot/initrd-${_kver}"
+    fi
+
+    echo -n "$_image"
+}
+
+# has_early_microcode <initramfs_image>
+has_early_microcode() {
+    local _image="$1"
+    local _is_early
+    _is_early=$(cpio --extract --verbose --quiet --to-stdout -- 'early_cpio' < "$_image" 2> /dev/null)
+    # Debian mkinitramfs does not create the file 'early_cpio', so let's check if firmware files exist
+    [[ "$_is_early" ]] || _is_early=$(cpio --list --verbose --quiet --to-stdout -- 'kernel/*/microcode/*.bin' < "$_image" 2> /dev/null)
+    [[ "$_is_early" ]] && return 0
+    return 1
+}
+
+# get_decompression_command <initramfs_image_header>
+get_decompression_command() {
+    local _bin="$1"
+    local _cmd
+
+    case $_bin in
+        $'\x1f\x8b'*)
+            _cmd="zcat --"
+            ;;
+        BZh*)
+            _cmd="bzcat --"
+            ;;
+        $'\x71\xc7'* | 070701)
+            _cmd="cat --"
+            ;;
+        $'\x02\x21'*)
+            _cmd="lz4 -d -c"
+            ;;
+        $'\x89'LZO$'\0'*)
+            _cmd="lzop -d -c"
+            ;;
+        $'\x28\xB5\x2F\xFD'*)
+            _cmd="zstd -d -c"
+            ;;
+        *)
+            if echo "test" | xz | xzcat --single-stream > /dev/null 2>&1; then
+                _cmd="xzcat --single-stream --"
+            else
+                _cmd="xzcat --"
+            fi
+            ;;
+    esac
+
+    echo -n "$_cmd"
+}
