@@ -1061,37 +1061,6 @@ drivers_dir="${drivers_dir%"${drivers_dir##*[!/]}"}"
 [[ $loginstall_l ]] && loginstall="$loginstall_l"
 [[ $machine_id_l ]] && machine_id="$machine_id_l"
 
-if ! [[ $outfile ]]; then
-    if [[ $machine_id != "no" ]]; then
-        if [[ -d "$dracutsysrootdir"/efi/Default ]] \
-            || [[ -d "$dracutsysrootdir"/boot/Default ]] \
-            || [[ -d "$dracutsysrootdir"/boot/efi/Default ]]; then
-            MACHINE_ID="Default"
-        elif [[ -s "$dracutsysrootdir"/etc/machine-id ]]; then
-            read -r MACHINE_ID < "$dracutsysrootdir"/etc/machine-id
-            [[ $MACHINE_ID == "uninitialized" ]] && MACHINE_ID="Default"
-        else
-            MACHINE_ID="Default"
-        fi
-    fi
-
-    if [[ -d "$dracutsysrootdir"/efi/loader/entries || -L "$dracutsysrootdir"/efi/loader/entries ]] \
-        && [[ $MACHINE_ID ]] \
-        && [[ -d "$dracutsysrootdir"/efi/${MACHINE_ID} || -L "$dracutsysrootdir"/efi/${MACHINE_ID} ]]; then
-        outfile="$dracutsysrootdir/efi/${MACHINE_ID}/${kernel}/initrd"
-    elif [[ -d "$dracutsysrootdir"/boot/loader/entries || -L "$dracutsysrootdir"/boot/loader/entries ]] \
-        && [[ $MACHINE_ID ]] \
-        && [[ -d "$dracutsysrootdir"/boot/${MACHINE_ID} || -L "$dracutsysrootdir"/boot/${MACHINE_ID} ]]; then
-        outfile="$dracutsysrootdir/boot/${MACHINE_ID}/${kernel}/initrd"
-    elif [[ -d "$dracutsysrootdir"/boot/efi/loader/entries || -L "$dracutsysrootdir"/boot/efi/loader/entries ]] \
-        && [[ $MACHINE_ID ]] \
-        && [[ -d "$dracutsysrootdir"/boot/efi/${MACHINE_ID} || -L "$dracutsysrootdir"/boot/efi/${MACHINE_ID} ]]; then
-        outfile="$dracutsysrootdir/boot/efi/${MACHINE_ID}/${kernel}/initrd"
-    else
-        outfile="/boot/initrd-$kernel"
-    fi
-fi
-
 # eliminate IFS hackery when messing with fw_dir
 export DRACUT_FIRMWARE_PATH=${fw_dir// /:}
 fw_dir=${fw_dir//:/ }
@@ -1235,6 +1204,17 @@ else
     printf "%s\n" "dracut[F]: Are you running from a git checkout?" >&2
     printf "%s\n" "dracut[F]: Try passing -l as an argument to $dracut_cmd" >&2
     exit 1
+fi
+
+if ! [[ $outfile ]]; then
+    DOLLAR_BOOT="$(get_dollar_boot)"
+    [[ $DOLLAR_BOOT ]] && ddebug "\$BOOT set to $DOLLAR_BOOT"
+
+    if [[ $machine_id != "no" ]]; then
+        MACHINE_ID="$(get_machine_id "${DOLLAR_BOOT:-no}")"
+    fi
+
+    outfile="$(get_default_initramfs_image "$kernel" "${DOLLAR_BOOT:-no}" "${MACHINE_ID:-no}")"
 fi
 
 if [[ $persistent_policy == "mapper" ]]; then
