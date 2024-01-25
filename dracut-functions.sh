@@ -1145,11 +1145,56 @@ label_uuid_to_dev() {
     esac
 }
 
-# get_machine_id
+# get_dollar_boot
+# $BOOT is the primary place to put boot menu entry resources into
+# see https://uapi-group.org/specifications/specs/boot_loader_specification
+get_dollar_boot() {
+    local _root_arg
+    local _esp
+    local _xbootldr
+    local _dollar_boot
+
+    if type -P bootctl &> /dev/null; then
+        if [[ -n $dracutsysrootdir ]]; then
+            _root_arg=(--root "$dracutsysrootdir")
+        fi
+        # shellcheck disable=SC2155 disable=SC2068
+        _esp=$(bootctl ${_root_arg[@]} -p 2> /dev/null)
+        # shellcheck disable=SC2155 disable=SC2068
+        _xbootldr=$(bootctl ${_root_arg[@]} -x 2> /dev/null)
+        [[ $_xbootldr == "$_esp" ]] && unset _xbootldr
+        _dollar_boot=${_xbootldr:-$_esp}
+    elif [[ -z $dracutsysrootdir ]]; then
+        if mountpoint -q /efi && [[ -d /efi/EFI ]]; then
+            _esp="/efi"
+        elif mountpoint -q /boot/efi && [[ -d /boot/efi/EFI ]]; then
+            _esp="/boot/efi"
+        fi
+        _dollar_boot=${_esp:-/boot}
+    else
+        if [[ -d "$dracutsysrootdir"/efi/EFI ]]; then
+            _esp="$dracutsysrootdir/efi"
+        elif [[ -d "$dracutsysrootdir"/boot/EFI ]]; then
+            _esp="$dracutsysrootdir/boot"
+        elif [[ -d "$dracutsysrootdir"/boot/efi/EFI ]]; then
+            _esp="$dracutsysrootdir/boot/efi"
+        fi
+        _dollar_boot=${_esp}
+    fi
+
+    echo -n "$_dollar_boot"
+}
+
+# get_machine_id [<$BOOT>|no]
 get_machine_id() {
+    local _dollar_boot
     local _machine_id
 
-    if [[ -d /efi/Default ]] || [[ -d /boot/Default ]] || [[ -d /boot/efi/Default ]]; then
+    if [[ $1 != "no" ]]; then
+        _dollar_boot=${1:-$(get_dollar_boot)}
+    fi
+
+    if [[ $_dollar_boot ]] && [[ -d "$_dollar_boot"/Default ]]; then
         _machine_id="Default"
     elif [[ -s /etc/machine-id ]]; then
         read -r _machine_id < /etc/machine-id
@@ -1161,29 +1206,27 @@ get_machine_id() {
     echo -n "$_machine_id"
 }
 
-# get_default_initramfs_image [<kernel_version>]
+# get_default_initramfs_image [<kernel_version>] [<$BOOT>|no] [<machine-id>|no]
 get_default_initramfs_image() {
     local _kver="$1"
+    local _dollar_boot
     local _machine_id
     local _image
 
     [[ $_kver ]] || _kver="$(uname -r)"
-    _machine_id="$(get_machine_id)"
+    if [[ $2 != "no" ]]; then
+        _dollar_boot=${2:-$(get_dollar_boot)}
+    fi
+    if [[ $3 != "no" ]]; then
+        _machine_id=${3:-$(get_machine_id "$_dollar_boot")}
+    fi
 
-    if [[ -d /efi/loader/entries || -L /efi/loader/entries ]] \
-        && [[ $_machine_id ]] \
-        && [[ -d /efi/${_machine_id} || -L /efi/${_machine_id} ]]; then
-        _image="/efi/${_machine_id}/${_kver}/initrd"
-    elif [[ -d /boot/loader/entries || -L /boot/loader/entries ]] \
-        && [[ $_machine_id ]] \
-        && [[ -d /boot/${_machine_id} || -L /boot/${_machine_id} ]]; then
-        _image="/boot/${_machine_id}/${_kver}/initrd"
-    elif [[ -d /boot/efi/loader/entries || -L /boot/efi/loader/entries ]] \
-        && [[ $_machine_id ]] \
-        && [[ -d /boot/efi/${_machine_id} || -L /boot/efi/${_machine_id} ]]; then
-        _image="/boot/efi/${_machine_id}/${_kver}/initrd"
-    elif [[ -f /boot/initrd-${_kver} ]]; then
-        _image="/boot/initrd-${_kver}"
+    if [[ $_dollar_boot ]] && [[ $_machine_id ]] \
+        && [[ -d "${_dollar_boot}"/loader/entries || -L "${_dollar_boot}"/loader/entries ]] \
+        && [[ -d "${_dollar_boot}"/${_machine_id} || -L "${_dollar_boot}"/${_machine_id} ]]; then
+        _image="${_dollar_boot}/${_machine_id}/${_kver}/initrd"
+    else
+        _image="$dracutsysrootdir/boot/initrd-${_kver}"
     fi
 
     echo -n "$_image"
