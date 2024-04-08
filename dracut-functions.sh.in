@@ -1098,7 +1098,7 @@ get_default_initramfs_image() {
         && [[ -d "${_dollar_boot}"/${_machine_id} || -L "${_dollar_boot}"/${_machine_id} ]]; then
         _image="${_dollar_boot}/${_machine_id}/${_kver}/initrd"
     else
-        _image="$dracutsysrootdir/boot/initrd-${_kver}"
+        _image="$dracutsysrootdir/boot/@INITRDPREFIX@${_kver}@INITRDSUFFIX@"
     fi
 
     echo -n "$_image"

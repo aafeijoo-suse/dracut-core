@@ -47,12 +47,18 @@ man8pages = man/dracut.8 \
 
 manpages = $(man1pages) $(man5pages) $(man7pages) $(man8pages)
 
+substitutions = dracut-functions.sh
+
 .PHONY: install clean archive tall check doc dracut-version.sh
 
-all: dracut-version.sh dracut.pc dracut-install src/skipcpio/skipcpio dracut-util
+all: dracut-version.sh dracut.pc $(substitutions) dracut-install src/skipcpio/skipcpio dracut-util
 
 %.o : %.c
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $(KMOD_CFLAGS) $< -o $@
+
+%.sh : %.sh.in
+	sed -e 's:@INITRDPREFIX@:$(initrdprefix):' -e 's:@INITRDSUFFIX@:$(initrdsuffix):' $< > $@
+	chmod --reference $< $@
 
 DRACUT_INSTALL_OBJECTS = \
         src/install/dracut-install.o \
@@ -110,17 +116,17 @@ endif
 	@rm -f -- "$@"
 	xsltproc -o "$@" -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
 
+ASCIIDOCVARS = -a "version=$(DRACUT_FULL_VERSION)" -a 'initrdprefix=$(initrdprefix)' -a 'initrdsuffix=$(initrdsuffix)'
 %.xml: %.asc
 	@rm -f -- "$@"
-	asciidoc -a "version=$(DRACUT_FULL_VERSION)" -d manpage -b docbook -o "$@" $<
+	asciidoc $(ASCIIDOCVARS) -d manpage -b docbook -o "$@" $<
 
 dracut.8: man/dracut.8.asc \
 	man/dracut.usage.asc
 
 dracut.html: man/dracut.asc $(manpages) docs/dracut.css man/dracut.usage.asc
 	@rm -f -- dracut.xml
-	asciidoc -a "mainversion=$(DRACUT_MAIN_VERSION)" \
-		-a "version=$(DRACUT_FULL_VERSION)" \
+	asciidoc $(ASCIIDOCVARS) -a "mainversion=$(DRACUT_MAIN_VERSION)" \
 		-a numbered \
 		-d book -b docbook -o dracut.xml man/dracut.asc
 	@rm -f -- dracut.html
@@ -219,6 +225,7 @@ clean:
 	$(RM) dracut-util util/util $(UTIL_OBJECTS)
 	$(RM) $(manpages) dracut.html
 	$(RM) dracut.pc
+	$(RM) $(substitutions)
 
 dist: dracut-$(DRACUT_MAIN_VERSION).tar.xz
 
