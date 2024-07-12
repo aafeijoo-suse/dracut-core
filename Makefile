@@ -47,7 +47,7 @@ man8pages = man/dracut.8 \
 
 manpages = $(man1pages) $(man5pages) $(man7pages) $(man8pages)
 
-.PHONY: install clean archive testimage test all check AUTHORS CONTRIBUTORS doc dracut-version.sh
+.PHONY: install clean archive tall check AUTHORS CONTRIBUTORS doc dracut-version.sh
 
 all: dracut-version.sh dracut.pc dracut-install src/skipcpio/skipcpio dracut-util
 
@@ -212,7 +212,6 @@ clean:
 	$(RM) */*~
 	$(RM) */*/*~
 	$(RM) $(manpages:%=%.xml) dracut.xml
-	$(RM) test-*.img
 	$(RM) dracut-*.tar.bz2 dracut-*.tar.xz
 	$(RM) dracut-version.sh
 	$(RM) dracut-install src/install/dracut-install $(DRACUT_INSTALL_OBJECTS)
@@ -220,7 +219,6 @@ clean:
 	$(RM) dracut-util util/util $(UTIL_OBJECTS)
 	$(RM) $(manpages) dracut.html
 	$(RM) dracut.pc
-	$(MAKE) -C test clean
 
 dist: dracut-$(DRACUT_MAIN_VERSION).tar.xz
 
@@ -255,29 +253,6 @@ endif
 
 check: all syncheck
 	@[ "$$EUID" == "0" ] || { echo "'check' must be run as root! Please use 'sudo'."; exit 1; }
-	@$(MAKE) -C test check
-
-testimage: all
-	./dracut.sh -N -l -a debug -f test-$(KVERSION).img $(KVERSION)
-	@echo wrote  test-$(KVERSION).img
-
-debugtestimage: all
-	./dracut.sh --debug -l -a debug -f test-$(KVERSION).img $(KVERSION)
-	@echo wrote  test-$(KVERSION).img
-
-testimages: all
-	./dracut.sh -l -a debug --kernel-only -f test-kernel-$(KVERSION).img $(KVERSION)
-	@echo wrote  test-$(KVERSION).img
-	./dracut.sh -l -a debug --no-kernel -f test-dracut.img $(KVERSION)
-	@echo wrote  test-dracut.img
-
-debughostimage: all
-	./dracut.sh --debug -H -l -f test-$(KVERSION).img $(KVERSION)
-	@echo wrote  test-$(KVERSION).img
-
-hostimage: all
-	./dracut.sh -H -l -f test-$(KVERSION).img $(KVERSION)
-	@echo wrote  test-$(KVERSION).img
 
 AUTHORS:
 	git shortlog  --numbered --summary -e |while read a rest || [ -n "$$rest" ]; do echo $$rest;done > AUTHORS
