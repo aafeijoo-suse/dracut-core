@@ -18,12 +18,10 @@ depends() {
 install() {
     declare -A KEYMAPS
 
-    if dracut_module_included "systemd"; then
-        unset FONT
-        unset KEYMAP
-        # shellcheck disable=SC1090
-        [[ -f "$dracutsysrootdir"/etc/vconsole.conf ]] && . "$dracutsysrootdir"/etc/vconsole.conf
-    fi
+    unset FONT
+    unset KEYMAP
+    # shellcheck disable=SC1090
+    [[ -f "$dracutsysrootdir"/etc/vconsole.conf ]] && . "$dracutsysrootdir"/etc/vconsole.conf
 
     KBDSUBDIRS=(consolefonts consoletrans keymaps unimaps)
     DEFAULT_FONT="${i18n_default_font:-eurlatgr}"
@@ -121,12 +119,6 @@ install() {
 
     install_base() {
         inst_multiple setfont loadkeys kbd_mode stty
-
-        if ! dracut_module_included "systemd"; then
-            inst "${moddir}"/console_init.sh /lib/udev/console_init
-            inst_rules "${moddir}"/10-console.rules
-            inst_hook cmdline 20 "${moddir}/parse-i18n.sh"
-        fi
 
         if [[ ${kbddir} != "/usr/share" ]]; then
             inst_dir /usr/share
@@ -257,16 +249,8 @@ install() {
             inst_simple "${kbddir}"/unimaps/"${FONT_UNIMAP}".uni
         fi
 
-        if dracut_module_included "systemd" && [[ -f $dracutsysrootdir${I18N_CONF} ]]; then
+        if [[ -f $dracutsysrootdir${I18N_CONF} ]]; then
             inst_simple ${I18N_CONF}
-        else
-            mksubdirs "${initdir}"${I18N_CONF}
-            print_vars LC_ALL LANG >> "${initdir}"${I18N_CONF}
-        fi
-
-        if ! dracut_module_included "systemd"; then
-            mksubdirs "${initdir}"${VCONFIG_CONF}
-            print_vars KEYMAP EXT_KEYMAPS UNICODE FONT FONT_MAP FONT_UNIMAP >> "${initdir}"${VCONFIG_CONF}
         fi
 
         return 0
@@ -296,8 +280,7 @@ install() {
     if checks; then
         install_base
 
-        # https://github.com/dracutdevs/dracut/issues/796
-        if dracut_module_included "systemd" && [[ -f $dracutsysrootdir${VCONFIG_CONF} ]]; then
+        if [[ -f $dracutsysrootdir${VCONFIG_CONF} ]]; then
             inst_simple ${VCONFIG_CONF}
         fi
 

@@ -101,25 +101,16 @@ if [ "$root" = "block:/dev/root" -o "$root" = "dhcp" ]; then
     udevadm control --reload
     wait_for_dev -n /dev/root
 
-    if [ -z "$DRACUT_SYSTEMD" ]; then
-        type write_fs_tab > /dev/null 2>&1 || . /lib/fs-lib.sh
-
-        write_fs_tab /dev/root "$nbdfstype" "$fsopts"
-
-        printf '/bin/mount %s\n' \
-            "$NEWROOT" \
-            > "$hookdir"/mount/01-$$-nbd.sh
-    else
-        mkdir -p /run/systemd/system/sysroot.mount.d
-        cat << EOF > /run/systemd/system/sysroot.mount.d/dhcp.conf
+    mkdir -p /run/systemd/system/sysroot.mount.d
+    cat << EOF > /run/systemd/system/sysroot.mount.d/dhcp.conf
 [Mount]
 Where=/sysroot
 What=/dev/root
 Type=$nbdfstype
 Options=$fsopts
 EOF
-        systemctl --no-block daemon-reload
-    fi
+    systemctl --no-block daemon-reload
+
     # if we're on systemd, use the nbd-generator script
     # to create the /sysroot mount.
 fi

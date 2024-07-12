@@ -51,10 +51,6 @@ install() {
         inst_rules 64-btrfs-dm.rules
     fi
 
-    if ! dracut_module_included "systemd"; then
-        inst_hook initqueue/timeout 10 "$moddir/btrfs_timeout.sh"
-    fi
-
     inst_multiple -o btrfsck btrfs-zero-log
     inst "$(command -v btrfs)" /sbin/btrfs
 }

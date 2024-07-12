@@ -142,17 +142,12 @@ install() {
         [[ $_conf ]] && echo "$_conf" >> "${initdir}/etc/cmdline.d/90multipath.conf"
     fi
 
-    if dracut_module_included "systemd"; then
-        if mpathconf_installed; then
-            inst_simple "${moddir}/multipathd-configure.service" "${systemdsystemunitdir}/multipathd-configure.service"
-            $SYSTEMCTL -q --root "$initdir" enable multipathd-configure.service
-        fi
-        inst_simple "${moddir}/multipathd.service" "${systemdsystemunitdir}/multipathd.service"
-        $SYSTEMCTL -q --root "$initdir" enable multipathd.service
-    else
-        inst_hook pre-trigger 02 "$moddir/multipathd.sh"
-        inst_hook cleanup 02 "$moddir/multipathd-stop.sh"
+    if mpathconf_installed; then
+        inst_simple "${moddir}/multipathd-configure.service" "${systemdsystemunitdir}/multipathd-configure.service"
+        $SYSTEMCTL -q --root "$initdir" enable multipathd-configure.service
     fi
+    inst_simple "${moddir}/multipathd.service" "${systemdsystemunitdir}/multipathd.service"
+    $SYSTEMCTL -q --root "$initdir" enable multipathd.service
 
     inst_hook cleanup 80 "$moddir/multipathd-needshutdown.sh"
     inst_hook shutdown 20 "$moddir/multipath-shutdown.sh"

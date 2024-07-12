@@ -41,7 +41,7 @@ if [ "${root%%:*}" = "iscsi" ]; then
     netroot=$root
     # if root is not specified try to mount the whole iSCSI LUN
     printf 'ENV{DEVTYPE}!="partition", SYMLINK=="disk/by-path/*-iscsi-*-*", SYMLINK+="root"\n' >> /etc/udev/rules.d/99-iscsi-root.rules
-    [ -n "$DRACUT_SYSTEMD" ] && systemctl is-active systemd-udevd && udevadm control --reload-rules
+    systemctl is-active systemd-udevd && udevadm control --reload-rules
     root=/dev/root
 
     write_fs_tab /dev/root
@@ -58,7 +58,7 @@ done
 if [ "${root}" = "/dev/root" ] && getarg "netroot=dhcp"; then
     # if root is not specified try to mount the whole iSCSI LUN
     printf 'ENV{DEVTYPE}!="partition", SYMLINK=="disk/by-path/*-iscsi-*-*", SYMLINK+="root"\n' >> /etc/udev/rules.d/99-iscsi-root.rules
-    [ -n "$DRACUT_SYSTEMD" ] && systemctl is-active systemd-udevd && udevadm control --reload-rules
+    systemctl is-active systemd-udevd && udevadm control --reload-rules
 fi
 
 if [ -n "$iscsiroot" ]; then
@@ -84,7 +84,7 @@ if [ -n "$iscsi_firmware" ]; then
     modprobe -b -q iscsi_boot_sysfs 2> /dev/null
     modprobe -b -q iscsi_ibft
     # if no ip= is given, but firmware
-    echo "${DRACUT_SYSTEMD+systemctl is-active initrd-root-device.target || }[ -f '/tmp/iscsistarted-firmware' ]" > "$hookdir"/initqueue/finished/iscsi_started.sh
+    echo "systemctl is-active initrd-root-device.target || [ -f '/tmp/iscsistarted-firmware' ]" > "$hookdir"/initqueue/finished/iscsi_started.sh
     initqueue --unique --online /sbin/iscsiroot online "iscsi:" "$NEWROOT"
     initqueue --unique --onetime --timeout /sbin/iscsiroot timeout "iscsi:" "$NEWROOT"
     initqueue --unique --onetime --settled /sbin/iscsiroot online "iscsi:" "'$NEWROOT'"
@@ -110,11 +110,9 @@ if arg=$(getarg rd.iscsi.initiator -d iscsi_initiator=) && [ -n "$arg" ] && ! [ 
     rm -f /etc/iscsi/initiatorname.iscsi
     mkdir -p /etc/iscsi
     ln -fs /run/initiatorname.iscsi /etc/iscsi/initiatorname.iscsi
-    if [ -n "$DRACUT_SYSTEMD" ]; then
-        systemctl try-restart iscsid
-        # FIXME: iscsid is not yet ready, when the service is :-/
-        sleep 1
-    fi
+    systemctl try-restart iscsid
+    # FIXME: iscsid is not yet ready, when the service is :-/
+    sleep 1
 fi
 
 # If not given on the cmdline and initiator-name available via iBFT
@@ -126,11 +124,9 @@ if [ -z "$iscsi_initiator" ] && [ -f /sys/firmware/ibft/initiator/initiator-name
         mkdir -p /etc/iscsi
         ln -fs /run/initiatorname.iscsi /etc/iscsi/initiatorname.iscsi
         : > /tmp/iscsi_set_initiator
-        if [ -n "$DRACUT_SYSTEMD" ]; then
-            systemctl try-restart iscsid
-            # FIXME: iscsid is not yet ready, when the service is :-/
-            sleep 1
-        fi
+        systemctl try-restart iscsid
+        # FIXME: iscsid is not yet ready, when the service is :-/
+        sleep 1
     fi
 fi
 
@@ -145,7 +141,7 @@ for nroot in $(getargs netroot); do
     type parse_iscsi_root > /dev/null 2>&1 || . /lib/net-lib.sh
     parse_iscsi_root "$nroot" || return 1
     netroot_enc=$(str_replace "$nroot" '/' '\2f')
-    echo "${DRACUT_SYSTEMD+systemctl is-active initrd-root-device.target || }[ -f '/tmp/iscsistarted-$netroot_enc' ]" > "$hookdir"/initqueue/finished/iscsi_started.sh
+    echo "systemctl is-active initrd-root-device.target || [ -f '/tmp/iscsistarted-$netroot_enc' ]" > "$hookdir"/initqueue/finished/iscsi_started.sh
 done
 
 # Done, all good!

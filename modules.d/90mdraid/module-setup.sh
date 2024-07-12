@@ -121,19 +121,17 @@ install() {
     inst_hook shutdown 30 "$moddir/md-shutdown.sh"
     inst_script "$moddir/mdraid-cleanup.sh" /sbin/mdraid-cleanup
     inst_script "$moddir/mdraid_start.sh" /sbin/mdraid_start
-    if dracut_module_included "systemd"; then
-        if [[ -e $dracutsysrootdir$systemdsystemunitdir/mdmon@.service ]]; then
-            inst_simple "$systemdsystemunitdir"/mdmon@.service
-        fi
-        if [[ -e $dracutsysrootdir$systemdsystemunitdir/mdadm-last-resort@.service ]]; then
-            inst_simple "$systemdsystemunitdir"/mdadm-last-resort@.service
-        fi
-        if [[ -e $dracutsysrootdir$systemdsystemunitdir/mdadm-last-resort@.timer ]]; then
-            inst_simple "$systemdsystemunitdir"/mdadm-last-resort@.timer
-        fi
-        if [[ -e $dracutsysrootdir$systemdsystemunitdir/mdadm-grow-continue@.service ]]; then
-            inst_simple "$systemdsystemunitdir"/mdadm-grow-continue@.service
-        fi
+    if [[ -e $dracutsysrootdir$systemdsystemunitdir/mdmon@.service ]]; then
+        inst_simple "$systemdsystemunitdir"/mdmon@.service
+    fi
+    if [[ -e $dracutsysrootdir$systemdsystemunitdir/mdadm-last-resort@.service ]]; then
+        inst_simple "$systemdsystemunitdir"/mdadm-last-resort@.service
+    fi
+    if [[ -e $dracutsysrootdir$systemdsystemunitdir/mdadm-last-resort@.timer ]]; then
+        inst_simple "$systemdsystemunitdir"/mdadm-last-resort@.timer
+    fi
+    if [[ -e $dracutsysrootdir$systemdsystemunitdir/mdadm-grow-continue@.service ]]; then
+        inst_simple "$systemdsystemunitdir"/mdadm-grow-continue@.service
     fi
     inst_hook pre-shutdown 30 "$moddir/mdmon-pre-shutdown.sh"
     dracut_need_initqueue

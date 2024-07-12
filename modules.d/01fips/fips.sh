@@ -20,15 +20,9 @@ type getarg > /dev/null 2>&1 || . /lib/dracut-lib.sh
 
 # systemd lets stdout go to journal only, but the system
 # has to halt when the integrity check fails to satisfy FIPS.
-if [ -z "$DRACUT_SYSTEMD" ]; then
-    fips_info() {
-        info "$*"
-    }
-else
-    fips_info() {
-        echo "$*" >&2
-    }
-fi
+fips_info() {
+    echo "$*" >&2
+}
 
 mount_boot() {
     boot=$(getarg boot=)

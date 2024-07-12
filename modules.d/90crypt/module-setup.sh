@@ -3,8 +3,8 @@
 # called by dracut
 check() {
     local fs
-    # if cryptsetup is not installed, then we cannot support encrypted devices.
-    require_any_binary "$systemdutildir"/systemd-cryptsetup cryptsetup || return 1
+
+    require_binaries "$systemdutildir"/systemd-cryptsetup || return 1
 
     [[ $hostonly ]] || [[ $mount_needs ]] && {
         for fs in "${host_fs_types[@]}"; do
@@ -106,13 +106,6 @@ install() {
     fi
 
     inst_hook cmdline 30 "$moddir/parse-crypt.sh"
-    if ! dracut_module_included "systemd"; then
-        inst_multiple cryptsetup rmdir readlink umount
-        inst_script "$moddir"/cryptroot-ask.sh /sbin/cryptroot-ask
-        inst_script "$moddir"/probe-keydev.sh /sbin/probe-keydev
-        inst_hook cmdline 10 "$moddir/parse-keydev.sh"
-        inst_hook cleanup 30 "$moddir/crypt-cleanup.sh"
-    fi
 
     if [[ $hostonly ]] && [[ -f $dracutsysrootdir/etc/crypttab ]]; then
         # filter /etc/crypttab for the devices we need
@@ -170,21 +163,19 @@ install() {
     inst_simple "$moddir/crypt-lib.sh" "/lib/dracut-crypt-lib.sh"
     inst_script "$moddir/crypt-run-generator.sh" "/sbin/crypt-run-generator"
 
-    if dracut_module_included "systemd"; then
-        # the cryptsetup targets are already pulled in by 00systemd, but not
-        # the enablement symlinks
-        inst_multiple -o \
-            "$tmpfilesdir"/cryptsetup.conf \
-            "$systemdutildir"/system-generators/systemd-cryptsetup-generator \
-            "$systemdutildir"/systemd-cryptsetup \
-            "$systemdsystemunitdir"/systemd-ask-password-console.path \
-            "$systemdsystemunitdir"/systemd-ask-password-console.service \
-            "$systemdsystemunitdir"/cryptsetup.target \
-            "$systemdsystemunitdir"/sysinit.target.wants/cryptsetup.target \
-            "$systemdsystemunitdir"/remote-cryptsetup.target \
-            "$systemdsystemunitdir"/initrd-root-device.target.wants/remote-cryptsetup.target \
-            systemd-ask-password systemd-tty-ask-password-agent
-    fi
+    # the cryptsetup targets are already pulled in by 00systemd, but not
+    # the enablement symlinks
+    inst_multiple -o \
+        "$tmpfilesdir"/cryptsetup.conf \
+        "$systemdutildir"/system-generators/systemd-cryptsetup-generator \
+        "$systemdutildir"/systemd-cryptsetup \
+        "$systemdsystemunitdir"/systemd-ask-password-console.path \
+        "$systemdsystemunitdir"/systemd-ask-password-console.service \
+        "$systemdsystemunitdir"/cryptsetup.target \
+        "$systemdsystemunitdir"/sysinit.target.wants/cryptsetup.target \
+        "$systemdsystemunitdir"/remote-cryptsetup.target \
+        "$systemdsystemunitdir"/initrd-root-device.target.wants/remote-cryptsetup.target \
+        systemd-ask-password systemd-tty-ask-password-agent
 
     # Install required libraries.
     _arch=${DRACUT_ARCH:-$(uname -m)}

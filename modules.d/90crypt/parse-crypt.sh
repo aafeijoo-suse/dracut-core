@@ -58,27 +58,17 @@ else
                 luksname="luks-$uuid"
             fi
 
-            if [ -z "$DRACUT_SYSTEMD" ]; then
+            luksname=$(dev_unit_name "$luksname")
+            # shellcheck disable=SC1003
+            luksname="$(str_replace "$luksname" '\' '\\')"
+
+            if ! crypttab_contains "$uuid"; then
                 {
                     printf -- 'ENV{ID_PART_ENTRY_UUID}=="*%s*", ' "$uuid"
                     printf -- 'RUN+="%s --settled --unique --onetime ' "$(command -v initqueue)"
-                    printf -- '--name cryptroot-ask-%%k %s ' "$(command -v cryptroot-ask)"
-                    # shellcheck disable=SC2016
-                    printf -- '$env{DEVNAME} %s %s %s"\n' "$luksname" "$is_keysource" "$tout"
+                    printf -- '--name systemd-cryptsetup-%%k %s start ' "$(command -v systemctl)"
+                    printf -- 'systemd-cryptsetup@%s.service"\n' "$luksname"
                 } >> /etc/udev/rules.d/70-luks.rules.new
-            else
-                luksname=$(dev_unit_name "$luksname")
-                # shellcheck disable=SC1003
-                luksname="$(str_replace "$luksname" '\' '\\')"
-
-                if ! crypttab_contains "$uuid"; then
-                    {
-                        printf -- 'ENV{ID_PART_ENTRY_UUID}=="*%s*", ' "$uuid"
-                        printf -- 'RUN+="%s --settled --unique --onetime ' "$(command -v initqueue)"
-                        printf -- '--name systemd-cryptsetup-%%k %s start ' "$(command -v systemctl)"
-                        printf -- 'systemd-cryptsetup@%s.service"\n' "$luksname"
-                    } >> /etc/udev/rules.d/70-luks.rules.new
-                fi
             fi
         done
 
@@ -98,27 +88,17 @@ else
                 luksname="luks-$serialid"
             fi
 
-            if [ -z "$DRACUT_SYSTEMD" ]; then
+            luksname=$(dev_unit_name "$luksname")
+            # shellcheck disable=SC1003
+            luksname="$(str_replace "$luksname" '\' '\\')"
+
+            if ! crypttab_contains "$serialid"; then
                 {
                     printf -- 'ENV{ID_SERIAL_SHORT}=="*%s*", ' "$serialid"
                     printf -- 'RUN+="%s --settled --unique --onetime ' "$(command -v initqueue)"
-                    printf -- '--name cryptroot-ask-%%k %s ' "$(command -v cryptroot-ask)"
-                    # shellcheck disable=SC2016
-                    printf -- '$env{DEVNAME} %s %s %s"\n' "$luksname" "$is_keysource" "$tout"
+                    printf -- '--name systemd-cryptsetup-%%k %s start ' "$(command -v systemctl)"
+                    printf -- 'systemd-cryptsetup@%s.service"\n' "$luksname"
                 } >> /etc/udev/rules.d/70-luks.rules.new
-            else
-                luksname=$(dev_unit_name "$luksname")
-                # shellcheck disable=SC1003
-                luksname="$(str_replace "$luksname" '\' '\\')"
-
-                if ! crypttab_contains "$serialid"; then
-                    {
-                        printf -- 'ENV{ID_SERIAL_SHORT}=="*%s*", ' "$serialid"
-                        printf -- 'RUN+="%s --settled --unique --onetime ' "$(command -v initqueue)"
-                        printf -- '--name systemd-cryptsetup-%%k %s start ' "$(command -v systemctl)"
-                        printf -- 'systemd-cryptsetup@%s.service"\n' "$luksname"
-                    } >> /etc/udev/rules.d/70-luks.rules.new
-                fi
             fi
         done
 
@@ -138,29 +118,18 @@ else
                 luksname="luks-$luksid"
             fi
 
-            if [ -z "$DRACUT_SYSTEMD" ]; then
+            luksname=$(dev_unit_name "$luksname")
+            # shellcheck disable=SC1003
+            luksname="$(str_replace "$luksname" '\' '\\')"
+
+            if ! crypttab_contains "$luksid"; then
                 {
                     printf -- 'ENV{ID_FS_TYPE}=="crypto_LUKS", '
                     printf -- 'ENV{ID_FS_UUID}=="*%s*", ' "$luksid"
                     printf -- 'RUN+="%s --settled --unique --onetime ' "$(command -v initqueue)"
-                    printf -- '--name cryptroot-ask-%%k %s ' "$(command -v cryptroot-ask)"
-                    # shellcheck disable=SC2016
-                    printf -- '$env{DEVNAME} %s %s %s"\n' "$luksname" "$is_keysource" "$tout"
+                    printf -- '--name systemd-cryptsetup-%%k %s start ' "$(command -v systemctl)"
+                    printf -- 'systemd-cryptsetup@%s.service"\n' "$luksname"
                 } >> /etc/udev/rules.d/70-luks.rules.new
-            else
-                luksname=$(dev_unit_name "$luksname")
-                # shellcheck disable=SC1003
-                luksname="$(str_replace "$luksname" '\' '\\')"
-
-                if ! crypttab_contains "$luksid"; then
-                    {
-                        printf -- 'ENV{ID_FS_TYPE}=="crypto_LUKS", '
-                        printf -- 'ENV{ID_FS_UUID}=="*%s*", ' "$luksid"
-                        printf -- 'RUN+="%s --settled --unique --onetime ' "$(command -v initqueue)"
-                        printf -- '--name systemd-cryptsetup-%%k %s start ' "$(command -v systemctl)"
-                        printf -- 'systemd-cryptsetup@%s.service"\n' "$luksname"
-                    } >> /etc/udev/rules.d/70-luks.rules.new
-                fi
             fi
 
             if [ $is_keysource -eq 0 ]; then
@@ -175,21 +144,12 @@ else
             fi
         done
     elif getargbool 0 rd.auto; then
-        if [ -z "$DRACUT_SYSTEMD" ]; then
-            {
-                printf -- 'ENV{ID_FS_TYPE}=="crypto_LUKS", RUN+="%s ' "$(command -v initqueue)"
-                printf -- '--unique --settled --onetime --name cryptroot-ask-%%k '
-                # shellcheck disable=SC2016
-                printf -- '%s $env{DEVNAME} luks-$env{ID_FS_UUID} 0 %s"\n' "$(command -v cryptroot-ask)" "$tout"
-            } >> /etc/udev/rules.d/70-luks.rules.new
-        else
-            {
-                printf -- 'ENV{ID_FS_TYPE}=="crypto_LUKS", RUN+="%s ' "$(command -v initqueue)"
-                printf -- '--unique --settled --onetime --name crypt-run-generator-%%k '
-                # shellcheck disable=SC2016
-                printf -- '%s $env{DEVNAME} luks-$env{ID_FS_UUID}"\n' "$(command -v crypt-run-generator)"
-            } >> /etc/udev/rules.d/70-luks.rules.new
-        fi
+        {
+            printf -- 'ENV{ID_FS_TYPE}=="crypto_LUKS", RUN+="%s ' "$(command -v initqueue)"
+            printf -- '--unique --settled --onetime --name crypt-run-generator-%%k '
+            # shellcheck disable=SC2016
+            printf -- '%s $env{DEVNAME} luks-$env{ID_FS_UUID}"\n' "$(command -v crypt-run-generator)"
+        } >> /etc/udev/rules.d/70-luks.rules.new7
     fi
 
     echo 'LABEL="luks_end"' >> /etc/udev/rules.d/70-luks.rules.new

@@ -13,6 +13,11 @@ depends() {
 
 # called by dracut
 install() {
+    if ! dracut_module_included "systemd"; then
+        dfatal "systemd is required"
+        exit 1
+    fi
+
     inst_multiple mount mknod mkdir sleep chown \
         sed ls flock cp mv dmesg rm ln rmmod mkfifo umount readlink setsid \
         modprobe chmod tr
@@ -37,12 +42,6 @@ install() {
 
     [[ $hostonly ]] && grep '^root:' "$dracutsysrootdir"/etc/shadow >> "$initdir/etc/shadow"
 
-    # install our scripts and hooks
-    inst_script "$moddir/init.sh" "/init"
-    inst_script "$moddir/initqueue.sh" "/sbin/initqueue"
-    inst_script "$moddir/loginit.sh" "/sbin/loginit"
-    inst_script "$moddir/rdsosreport.sh" "/sbin/rdsosreport"
-
     [ -e "${initdir}/lib" ] || mkdir -m 0755 -p "${initdir}"/lib
     mkdir -m 0755 -p "${initdir}"/lib/dracut
     mkdir -m 0755 -p "${initdir}"/var/lib/dracut/hooks
@@ -55,11 +54,6 @@ install() {
     inst_simple "$moddir/dracut-lib.sh" "/lib/dracut-lib.sh"
     inst_simple "$moddir/dracut-dev-lib.sh" "/lib/dracut-dev-lib.sh"
     mkdir -p "${initdir}"/var
-
-    if ! dracut_module_included "systemd"; then
-        inst_multiple switch_root || dfatal "Failed to install switch_root"
-        inst_hook cmdline 10 "$moddir/parse-root-opts.sh"
-    fi
 
     if [[ $realinitpath ]]; then
         for i in $realinitpath; do
@@ -76,23 +70,12 @@ install() {
 
     local VERSION=""
     local PRETTY_NAME=""
-    # Derive an os-release file from the host, if it exists
-    if [[ -e $dracutsysrootdir/etc/os-release ]]; then
-        # shellcheck disable=SC1090
-        . "$dracutsysrootdir"/etc/os-release
-        grep -hE -ve '^VERSION=' -ve '^PRETTY_NAME' "$dracutsysrootdir"/etc/os-release > "${initdir}"/usr/lib/initrd-release
-        [[ -n ${VERSION} ]] && VERSION+=" "
-        [[ -n ${PRETTY_NAME} ]] && PRETTY_NAME+=" "
-    else
-        # Fall back to synthesizing one, since dracut is presently used
-        # on non-systemd systems as well.
-        {
-            echo "NAME=dracut"
-            echo "ID=dracut"
-            echo "VERSION_ID=\"$DRACUT_VERSION\""
-            echo 'ANSI_COLOR="0;34"'
-        } > "${initdir}"/usr/lib/initrd-release
-    fi
+    # Derive an os-release file from the host
+    # shellcheck disable=SC1090
+    . "$dracutsysrootdir"/etc/os-release
+    grep -hE -ve '^VERSION=' -ve '^PRETTY_NAME' "$dracutsysrootdir"/etc/os-release > "${initdir}"/usr/lib/initrd-release
+    [[ -n ${VERSION} ]] && VERSION+=" "
+    [[ -n ${PRETTY_NAME} ]] && PRETTY_NAME+=" "
     VERSION+="dracut-$DRACUT_VERSION"
     PRETTY_NAME+="dracut-$DRACUT_VERSION (Initramfs)"
     {
@@ -113,11 +96,9 @@ install() {
         if [[ -n ${host_devs[*]} ]]; then
             dracut_need_initqueue
         fi
-        if [[ -f $initdir/lib/dracut/need-initqueue ]] || ! dracut_module_included "systemd"; then
+        if [[ -f $initdir/lib/dracut/need-initqueue ]]; then
             (
-                if dracut_module_included "systemd"; then
-                    export DRACUT_SYSTEMD=1
-                fi
+                export DRACUT_SYSTEMD=1
                 export PREFIX="$initdir"
                 export hookdir=/lib/dracut/hooks
 

@@ -36,14 +36,6 @@ iroot=${iroot#:}
 # figured out a way how to check whether this is built-in or not
 modprobe crc32c 2> /dev/null
 
-# start iscsiuio if needed
-if [ -z "${DRACUT_SYSTEMD}" ] \
-    && { [ -e /sys/module/bnx2i ] || [ -e /sys/module/qedi ]; } \
-    && ! [ -e /tmp/iscsiuio-started ]; then
-    iscsiuio
-    : > /tmp/iscsiuio-started
-fi
-
 handle_firmware() {
     local ifaces retry _res
 
@@ -150,11 +142,9 @@ handle_netroot() {
         mkdir -p /etc/iscsi
         ln -fs /run/initiatorname.iscsi /etc/iscsi/initiatorname.iscsi
         : > /tmp/iscsi_set_initiator
-        if [ -n "$DRACUT_SYSTEMD" ]; then
-            systemctl try-restart iscsid
-            # FIXME: iscsid is not yet ready, when the service is :-/
-            sleep 1
-        fi
+        systemctl try-restart iscsid
+        # FIXME: iscsid is not yet ready, when the service is :-/
+        sleep 1
     fi
 
     if [ -z "$iscsi_initiator" ]; then
@@ -171,11 +161,9 @@ handle_netroot() {
         mkdir -p /etc/iscsi
         ln -fs /run/initiatorname.iscsi /etc/iscsi/initiatorname.iscsi
         : > /tmp/iscsi_set_initiator
-        if [ -n "$DRACUT_SYSTEMD" ]; then
-            systemctl try-restart iscsid
-            # FIXME: iscsid is not yet ready, when the service is :-/
-            sleep 1
-        fi
+        systemctl try-restart iscsid
+        # FIXME: iscsid is not yet ready, when the service is :-/
+        sleep 1
     fi
 
     if [ -z "$iscsi_target_port" ]; then
@@ -195,16 +183,9 @@ handle_netroot() {
     if ! [ -e /etc/iscsi/initiatorname.iscsi ]; then
         mkdir -p /etc/iscsi
         ln -fs /run/initiatorname.iscsi /etc/iscsi/initiatorname.iscsi
-        if [ -n "$DRACUT_SYSTEMD" ]; then
-            systemctl try-restart iscsid
-            # FIXME: iscsid is not yet ready, when the service is :-/
-            sleep 1
-        fi
-    fi
-
-    if [ -z "$DRACUT_SYSTEMD" ]; then
-        iscsid
-        sleep 2
+        systemctl try-restart iscsid
+        # FIXME: iscsid is not yet ready, when the service is :-/
+        sleep 1
     fi
 
     # FIXME $iscsi_protocol??
@@ -215,10 +196,6 @@ handle_netroot() {
         udevadm control --reload
         write_fs_tab /dev/root
         wait_for_dev -n /dev/root
-
-        # install mount script
-        [ -z "$DRACUT_SYSTEMD" ] \
-            && echo "iscsi_lun=$iscsi_lun . /bin/mount-lun.sh " > "$hookdir"/mount/01-$$-iscsi.sh
     fi
 
     if strglobin "$iscsi_target_ip" '*:*:*' && ! strglobin "$iscsi_target_ip" '['; then

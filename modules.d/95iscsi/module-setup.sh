@@ -216,62 +216,58 @@ install() {
     fi
 
     inst_hook cmdline 90 "$moddir/parse-iscsiroot.sh"
-    inst_hook cleanup 90 "$moddir/cleanup-iscsi.sh"
     inst "$moddir/iscsiroot.sh" "/sbin/iscsiroot"
 
-    if ! dracut_module_included "systemd"; then
-        inst "$moddir/mount-lun.sh" "/bin/mount-lun.sh"
-    else
-        inst_multiple -o \
-            "$systemdsystemunitdir"/iscsi.service \
-            "$systemdsystemunitdir"/iscsi-init.service \
-            "$systemdsystemunitdir"/iscsid.service \
-            "$systemdsystemunitdir"/iscsid.socket \
-            "$systemdsystemunitdir"/iscsiuio.service \
-            "$systemdsystemunitdir"/iscsiuio.socket \
-            iscsiadm iscsid
+    inst_multiple -o \
+        "$systemdsystemunitdir"/iscsi.service \
+        "$systemdsystemunitdir"/iscsi-init.service \
+        "$systemdsystemunitdir"/iscsid.service \
+        "$systemdsystemunitdir"/iscsid.socket \
+        "$systemdsystemunitdir"/iscsiuio.service \
+        "$systemdsystemunitdir"/iscsiuio.socket \
+        iscsiadm iscsid
 
-        for i in \
-            iscsid.socket \
-            iscsiuio.socket; do
-            $SYSTEMCTL -q --root "$initdir" enable "$i"
-        done
+    for i in \
+        iscsid.socket \
+        iscsiuio.socket; do
+        $SYSTEMCTL -q --root "$initdir" enable "$i"
+    done
 
-        mkdir -p "${initdir}/$systemdsystemunitdir/iscsid.service.d"
-        {
-            echo "[Unit]"
-            echo "DefaultDependencies=no"
-            echo "Conflicts=shutdown.target"
-            echo "Before=shutdown.target"
-        } > "${initdir}/$systemdsystemunitdir/iscsid.service.d/dracut.conf"
+    mkdir -p "${initdir}/$systemdsystemunitdir/iscsid.service.d"
+    {
+        echo "[Unit]"
+        echo "DefaultDependencies=no"
+        echo "Conflicts=shutdown.target"
+        echo "Before=shutdown.target"
+    } > "${initdir}/$systemdsystemunitdir/iscsid.service.d/dracut.conf"
 
-        mkdir -p "${initdir}/$systemdsystemunitdir/iscsid.socket.d"
-        {
-            echo "[Unit]"
-            echo "DefaultDependencies=no"
-            echo "Conflicts=shutdown.target"
-            echo "Before=shutdown.target sockets.target"
-        } > "${initdir}/$systemdsystemunitdir/iscsid.socket.d/dracut.conf"
+    mkdir -p "${initdir}/$systemdsystemunitdir/iscsid.socket.d"
+    {
+        echo "[Unit]"
+        echo "DefaultDependencies=no"
+        echo "Conflicts=shutdown.target"
+        echo "Before=shutdown.target sockets.target"
+    } > "${initdir}/$systemdsystemunitdir/iscsid.socket.d/dracut.conf"
 
-        mkdir -p "${initdir}/$systemdsystemunitdir/iscsiuio.service.d"
-        {
-            echo "[Unit]"
-            echo "DefaultDependencies=no"
-            echo "Conflicts=shutdown.target"
-            echo "Before=shutdown.target"
-        } > "${initdir}/$systemdsystemunitdir/iscsiuio.service.d/dracut.conf"
+    mkdir -p "${initdir}/$systemdsystemunitdir/iscsiuio.service.d"
+    {
+        echo "[Unit]"
+        echo "DefaultDependencies=no"
+        echo "Conflicts=shutdown.target"
+        echo "Before=shutdown.target"
+    } > "${initdir}/$systemdsystemunitdir/iscsiuio.service.d/dracut.conf"
 
-        mkdir -p "${initdir}/$systemdsystemunitdir/iscsiuio.socket.d"
-        {
-            echo "[Unit]"
-            echo "DefaultDependencies=no"
-            echo "Conflicts=shutdown.target"
-            echo "Before=shutdown.target sockets.target"
-        } > "${initdir}/$systemdsystemunitdir/iscsiuio.socket.d/dracut.conf"
+    mkdir -p "${initdir}/$systemdsystemunitdir/iscsiuio.socket.d"
+    {
+        echo "[Unit]"
+        echo "DefaultDependencies=no"
+        echo "Conflicts=shutdown.target"
+        echo "Before=shutdown.target sockets.target"
+    } > "${initdir}/$systemdsystemunitdir/iscsiuio.socket.d/dracut.conf"
 
-        # Fedora 34 iscsid requires iscsi-shutdown.service
-        # which would terminate all iSCSI connections on switch root
-        cat > "${initdir}/$systemdsystemunitdir/iscsi-shutdown.service" << EOF
+    # Fedora 34 iscsid requires iscsi-shutdown.service
+    # which would terminate all iSCSI connections on switch root
+    cat > "${initdir}/$systemdsystemunitdir/iscsi-shutdown.service" << EOF
 [Unit]
 Description=Dummy iscsi-shutdown.service for the initrd
 Documentation=man:iscsid(8) man:iscsiadm(8)
@@ -285,7 +281,7 @@ Type=oneshot
 RemainAfterExit=false
 ExecStart=-/usr/bin/true
 EOF
-    fi
+
     inst_dir /var/lib/iscsi
     mkdir -p "${initdir}/var/lib/iscsi/nodes"
     # Fedora 34 iscsid wants a non-empty /var/lib/iscsi/nodes directory

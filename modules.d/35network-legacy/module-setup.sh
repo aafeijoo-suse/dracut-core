@@ -27,9 +27,7 @@ install() {
     local _arch
 
     # Add default link if there is no persistent network device naming
-    if [ ! -e /etc/udev/rules.d/70-persistent-net.rules ] &&\
-         dracut_module_included "systemd"; then
-
+    if [ ! -e /etc/udev/rules.d/70-persistent-net.rules ]; then
         inst_multiple -o "${systemdnetwork}/99-default.link"
         [[ $hostonly ]] && inst_multiple -H -o "${systemdnetworkconfdir}/*.link"
     fi
