@@ -29,5 +29,5 @@ nm_generate_connections() {
 }
 
 nm_reload_connections() {
-    [ -n "$DRACUT_SYSTEMD" ] && systemctl is-active nm-initrd.service && nmcli connection reload
+    systemctl is-active nm-initrd.service && nmcli connection reload
 }
