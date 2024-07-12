@@ -51,9 +51,8 @@ install() {
     # in the initrd
     # Avoid interference with systemd predictable network device naming
     if dracut_module_included "network-legacy" || dracut_module_included "network-manager"; then
-        if [ -e /etc/udev/rules.d/70-persistent-net.rules ] && \
-           ! dracut_module_included "systemd-networkd"; then
-               [[ $hostonly ]] && inst_rules 70-persistent-net.rules
+        if [ -e /etc/udev/rules.d/70-persistent-net.rules ]; then
+            [[ $hostonly ]] && inst_rules 70-persistent-net.rules
         fi
     fi
 

@@ -9,7 +9,7 @@ check() {
 depends() {
     is_qemu_virtualized && echo -n "qemu-net "
 
-    for module in network-manager network-legacy systemd-networkd; do
+    for module in network-manager network-legacy; do
         if dracut_module_included "$module"; then
             network_handler="$module"
             break
@@ -19,8 +19,6 @@ depends() {
     if [ -z "$network_handler" ]; then
         if check_module "network-manager"; then
             network_handler="network-manager"
-        elif check_module "systemd-networkd"; then
-            network_handler="systemd-networkd"
         else
             network_handler="network-legacy"
         fi
