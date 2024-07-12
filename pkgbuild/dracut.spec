@@ -38,8 +38,6 @@ BuildRequires:  docbook-xsl-stylesheets
 BuildRequires:  libxslt
 BuildRequires:  pkgconfig(libkmod)
 BuildRequires:  pkgconfig(systemd) >= 219
-BuildRequires:  cargo
-BuildRequires:  rust
 Requires:       gawk
 Requires:       %{_bindir}/get_kernel_version
 Requires:       bash
@@ -126,8 +124,7 @@ but are not normally supported or required.
 %configure \
   --systemdsystemunitdir=%{_unitdir} \
   --bashcompletiondir=%{_datadir}/bash-completion/completions \
-  --libdir=%{_prefix}/lib \
-  --enable-dracut-cpio
+  --libdir=%{_prefix}/lib
 %make_build all CFLAGS="%{optflags}" %{?_smp_mflags}
 
 %install
@@ -334,7 +331,6 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{dracutlibdir}/dracut-install
 %{dracutlibdir}/dracut-util
 %{dracutlibdir}/dracut-getarg
-%{dracutlibdir}/dracut-cpio
 
 %dir %{dracutlibdir}/modules.d
 %{dracutlibdir}/modules.d/00bash
