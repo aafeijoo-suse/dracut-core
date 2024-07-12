@@ -36,7 +36,6 @@ man7pages = man/dracut.cmdline.7 \
             man/dracut.modules.7
 
 man8pages = man/dracut.8 \
-            man/dracut-catimages.8 \
             modules.d/98dracut-systemd/dracut-cmdline.service.8 \
             modules.d/98dracut-systemd/dracut-initqueue.service.8 \
             modules.d/98dracut-systemd/dracut-mount.service.8 \
@@ -146,7 +145,6 @@ install: all
 	mkdir -p $(DESTDIR)$(pkglibdir)/modules.d
 	mkdir -p $(DESTDIR)$(mandir)/man1 $(DESTDIR)$(mandir)/man5 $(DESTDIR)$(mandir)/man7 $(DESTDIR)$(mandir)/man8
 	install -m 0755 dracut.sh $(DESTDIR)$(bindir)/dracut
-	install -m 0755 dracut-catimages.sh $(DESTDIR)$(bindir)/dracut-catimages
 	install -m 0755 lsinitrd.sh $(DESTDIR)$(bindir)/lsinitrd
 	install -m 0644 dracut.conf $(DESTDIR)$(sysconfdir)/dracut.conf
 	mkdir -p $(DESTDIR)$(sysconfdir)/dracut.conf.d
