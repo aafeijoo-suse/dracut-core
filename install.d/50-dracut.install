@@ -12,8 +12,9 @@ if ! [[ ${KERNEL_INSTALL_MACHINE_ID-x} ]]; then
     exit 0
 fi
 
-# Do not attempt to create initramfs if the supplied image is already a UKI
-if [[ $KERNEL_INSTALL_IMAGE_TYPE == "uki" ]]; then
+# Do not attempt to create initramfs if the supplied image is already a UKI or
+# the requested layout is a UKI
+if [[ $KERNEL_INSTALL_IMAGE_TYPE == "uki" ]] || [[ $KERNEL_INSTALL_LAYOUT == "uki" ]]; then
     exit 0
 fi
 
@@ -24,31 +25,14 @@ if [[ ${KERNEL_INSTALL_INITRD_GENERATOR:-dracut} != "dracut" ]] \
     exit 0
 fi
 
-# Mismatching the install layout and the --uefi/--no-uefi opts just creates a mess.
-if [[ $KERNEL_INSTALL_LAYOUT == "uki" && -n $KERNEL_INSTALL_STAGING_AREA ]]; then
-    BOOT_DIR_ABS="$KERNEL_INSTALL_STAGING_AREA"
-    if [[ -z $KERNEL_INSTALL_UKI_GENERATOR || $KERNEL_INSTALL_UKI_GENERATOR == "dracut" ]]; then
-        # No uki generator preference set or we have been chosen
-        IMAGE="uki.efi"
-        UEFI_OPTS="--uefi"
-    elif [[ -z $KERNEL_INSTALL_INITRD_GENERATOR || $KERNEL_INSTALL_INITRD_GENERATOR == "dracut" ]]; then
-        # We aren't the uki generator, but we have been requested to make the initrd
-        IMAGE="initrd"
-        UEFI_OPTS="--no-uefi"
-    else
-        exit 0
-    fi
-elif [[ $KERNEL_INSTALL_LAYOUT == "bls" && -n $KERNEL_INSTALL_STAGING_AREA ]]; then
+if [[ $KERNEL_INSTALL_LAYOUT == "bls" && -n $KERNEL_INSTALL_STAGING_AREA ]]; then
     BOOT_DIR_ABS="$KERNEL_INSTALL_STAGING_AREA"
     if [[ -z $KERNEL_INSTALL_INITRD_GENERATOR || $KERNEL_INSTALL_INITRD_GENERATOR == "dracut" ]]; then
         IMAGE="initrd"
-        UEFI_OPTS="--no-uefi"
     else
         exit 0
     fi
 elif [[ ${KERNEL_INSTALL_INITRD_GENERATOR:-dracut} == "dracut" ]]; then
-    # No layout information, use users --uefi/--no-uefi preference
-    UEFI_OPTS=""
     if [[ -d $BOOT_DIR_ABS ]]; then
         IMAGE="initrd"
     else
@@ -118,7 +102,6 @@ case "$COMMAND" in
             ${noimageifnotneeded:+--noimageifnotneeded} \
             $([[ $KERNEL_INSTALL_VERBOSE == 1 ]] && echo --verbose) \
             $([[ -n $KERNEL_IMAGE ]] && echo --kernel-image "$KERNEL_IMAGE") \
-            "$UEFI_OPTS" \
             --kver "$KERNEL_VERSION" \
             "$BOOT_DIR_ABS/$IMAGE"
         ret=$?

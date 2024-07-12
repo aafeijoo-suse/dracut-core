@@ -281,10 +281,6 @@ hostimage: all
 	./dracut.sh -H -l -f test-$(KVERSION).img $(KVERSION)
 	@echo wrote  test-$(KVERSION).img
 
-efi: all
-	./dracut.sh --uefi -H -l -f linux-$(KVERSION).efi $(KVERSION)
-	@echo wrote linux-$(KVERSION).efi
-
 AUTHORS:
 	git shortlog  --numbered --summary -e |while read a rest || [ -n "$$rest" ]; do echo $$rest;done > AUTHORS
 

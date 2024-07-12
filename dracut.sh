@@ -269,16 +269,6 @@ Creates initial ramdisk images for preloading modules
   --reproducible        Create reproducible images.
   --no-reproducible     Do not create reproducible images.
   --loginstall [DIR]    Log all files installed from the host to [DIR].
-  --uefi                Create an UEFI executable with the kernel cmdline and
-                         kernel combined.
-  --no-uefi             Disables UEFI mode.
-  --no-machineid        Affects the default output filename of the UEFI
-                         executable, discarding the <MACHINE_ID> part.
-  --uefi-stub [FILE]    Use the UEFI stub [FILE] to create an UEFI executable.
-  --uefi-splash-image [FILE]
-                        Use [FILE] as a splash image when creating an UEFI
-                         executable. Requires bitmap (.bmp) image format.
-  --kernel-image [FILE] Location of the kernel image.
   --regenerate-all      Regenerate all initramfs images at the default location
                          for the kernel versions found on the system.
   -p, --parallel        Use parallel processing if possible (currently only
@@ -466,11 +456,6 @@ rearrange_params() {
             --long reproducible \
             --long no-reproducible \
             --long loginstall: \
-            --long uefi \
-            --long no-uefi \
-            --long uefi-stub: \
-            --long uefi-splash-image: \
-            --long kernel-image: \
             --long no-hostonly-i18n \
             --long hostonly-i18n \
             --long hostonly-nics: \
@@ -831,23 +816,6 @@ while :; do
         --check-supported) check_supported="yes" ;;
         --reproducible) reproducible_l="yes" ;;
         --no-reproducible) reproducible_l="no" ;;
-        --uefi) uefi_l="yes" ;;
-        --no-uefi) uefi_l="no" ;;
-        --uefi-stub)
-            uefi_stub_l="$2"
-            PARMS_TO_STORE+=" '$2'"
-            shift
-            ;;
-        --uefi-splash-image)
-            uefi_splash_image_l="$2"
-            PARMS_TO_STORE+=" '$2'"
-            shift
-            ;;
-        --kernel-image)
-            kernel_image_l="$2"
-            PARMS_TO_STORE+=" '$2'"
-            shift
-            ;;
         --no-machineid)
             machine_id_l="no"
             ;;
@@ -1091,10 +1059,6 @@ drivers_dir="${drivers_dir%"${drivers_dir##*[!/]}"}"
 [[ $logfile_l ]] && logfile="$logfile_l"
 [[ $reproducible_l ]] && reproducible="$reproducible_l"
 [[ $loginstall_l ]] && loginstall="$loginstall_l"
-[[ $uefi_l ]] && uefi=$uefi_l
-[[ $uefi_stub_l ]] && uefi_stub="$uefi_stub_l"
-[[ $uefi_splash_image_l ]] && uefi_splash_image="$uefi_splash_image_l"
-[[ $kernel_image_l ]] && kernel_image="$kernel_image_l"
 [[ $machine_id_l ]] && machine_id="$machine_id_l"
 
 if ! [[ $outfile ]]; then
@@ -1111,55 +1075,20 @@ if ! [[ $outfile ]]; then
         fi
     fi
 
-    if [[ $uefi == "yes" ]]; then
-        # shellcheck disable=SC2154
-        if [[ -n $uefi_secureboot_key && -z $uefi_secureboot_cert ]] || [[ -z $uefi_secureboot_key && -n $uefi_secureboot_cert ]]; then
-            printf "%s\n" "dracut[F]: Need 'uefi_secureboot_key' and 'uefi_secureboot_cert' both to be set." >&2
-            exit 1
-        fi
-
-        if [[ -n $uefi_secureboot_key && -n $uefi_secureboot_cert ]] && ! command -v sbsign &> /dev/null; then
-            printf "%s\n" "dracut[F]: Need 'sbsign' to create a signed UEFI executable." >&2
-            exit 1
-        fi
-
-        BUILD_ID=$(cat "$dracutsysrootdir"/etc/os-release "$dracutsysrootdir"/usr/lib/os-release \
-            | while read -r line || [[ $line ]]; do
-                [[ $line =~ BUILD_ID\=* ]] && eval "$line" && echo "$BUILD_ID" && break
-            done)
-        if [[ -z $dracutsysrootdir ]]; then
-            if [[ -d /efi ]] && mountpoint -q /efi; then
-                efidir=/efi/EFI
-            else
-                efidir=/boot/EFI
-                if [[ -d /boot/efi/EFI ]]; then
-                    efidir=/boot/efi/EFI
-                fi
-            fi
-        else
-            efidir=/boot/EFI
-            if [[ -d $dracutsysrootdir/boot/efi/EFI ]]; then
-                efidir=/boot/efi/EFI
-            fi
-        fi
-        mkdir -p "$dracutsysrootdir$efidir/Linux"
-        outfile="$dracutsysrootdir$efidir/Linux/linux-$kernel${MACHINE_ID:+-${MACHINE_ID}}${BUILD_ID:+-${BUILD_ID}}.efi"
+    if [[ -d "$dracutsysrootdir"/efi/loader/entries || -L "$dracutsysrootdir"/efi/loader/entries ]] \
+        && [[ $MACHINE_ID ]] \
+        && [[ -d "$dracutsysrootdir"/efi/${MACHINE_ID} || -L "$dracutsysrootdir"/efi/${MACHINE_ID} ]]; then
+        outfile="$dracutsysrootdir/efi/${MACHINE_ID}/${kernel}/initrd"
+    elif [[ -d "$dracutsysrootdir"/boot/loader/entries || -L "$dracutsysrootdir"/boot/loader/entries ]] \
+        && [[ $MACHINE_ID ]] \
+        && [[ -d "$dracutsysrootdir"/boot/${MACHINE_ID} || -L "$dracutsysrootdir"/boot/${MACHINE_ID} ]]; then
+        outfile="$dracutsysrootdir/boot/${MACHINE_ID}/${kernel}/initrd"
+    elif [[ -d "$dracutsysrootdir"/boot/efi/loader/entries || -L "$dracutsysrootdir"/boot/efi/loader/entries ]] \
+        && [[ $MACHINE_ID ]] \
+        && [[ -d "$dracutsysrootdir"/boot/efi/${MACHINE_ID} || -L "$dracutsysrootdir"/boot/efi/${MACHINE_ID} ]]; then
+        outfile="$dracutsysrootdir/boot/efi/${MACHINE_ID}/${kernel}/initrd"
     else
-        if [[ -d "$dracutsysrootdir"/efi/loader/entries || -L "$dracutsysrootdir"/efi/loader/entries ]] \
-            && [[ $MACHINE_ID ]] \
-            && [[ -d "$dracutsysrootdir"/efi/${MACHINE_ID} || -L "$dracutsysrootdir"/efi/${MACHINE_ID} ]]; then
-            outfile="$dracutsysrootdir/efi/${MACHINE_ID}/${kernel}/initrd"
-        elif [[ -d "$dracutsysrootdir"/boot/loader/entries || -L "$dracutsysrootdir"/boot/loader/entries ]] \
-            && [[ $MACHINE_ID ]] \
-            && [[ -d "$dracutsysrootdir"/boot/${MACHINE_ID} || -L "$dracutsysrootdir"/boot/${MACHINE_ID} ]]; then
-            outfile="$dracutsysrootdir/boot/${MACHINE_ID}/${kernel}/initrd"
-        elif [[ -d "$dracutsysrootdir"/boot/efi/loader/entries || -L "$dracutsysrootdir"/boot/efi/loader/entries ]] \
-            && [[ $MACHINE_ID ]] \
-            && [[ -d "$dracutsysrootdir"/boot/efi/${MACHINE_ID} || -L "$dracutsysrootdir"/boot/efi/${MACHINE_ID} ]]; then
-            outfile="$dracutsysrootdir/boot/efi/${MACHINE_ID}/${kernel}/initrd"
-        else
-            outfile="/boot/initrd-$kernel"
-        fi
+        outfile="/boot/initrd-$kernel"
     fi
 fi
 
@@ -1490,49 +1419,6 @@ if [[ ! $print_cmdline ]]; then
             exit 1
         fi
         loginstall=$(readlink -f "$loginstall")
-    fi
-
-    if [[ $uefi == yes ]]; then
-        if ! command -v objcopy &> /dev/null; then
-            dfatal "Need 'objcopy' to create a UEFI executable"
-            exit 1
-        fi
-        unset EFI_MACHINE_TYPE_NAME
-        case "${DRACUT_ARCH:-$(uname -m)}" in
-            x86_64)
-                EFI_MACHINE_TYPE_NAME=x64
-                ;;
-            i?86)
-                EFI_MACHINE_TYPE_NAME=ia32
-                ;;
-            aarch64)
-                EFI_MACHINE_TYPE_NAME=aa64
-                ;;
-            *)
-                dfatal "Architecture '${DRACUT_ARCH:-$(uname -m)}' not supported to create a UEFI executable"
-                exit 1
-                ;;
-        esac
-
-        if ! [[ -s $uefi_stub ]]; then
-            uefi_stub="$dracutsysrootdir${systemdutildir}/boot/efi/linux${EFI_MACHINE_TYPE_NAME}.efi.stub"
-        fi
-
-        if ! [[ -s $uefi_stub ]]; then
-            dfatal "Can't find a uefi stub '$uefi_stub' to create a UEFI executable"
-            exit 1
-        fi
-
-        if ! [[ $kernel_image ]]; then
-            for kernel_image in "$dracutsysrootdir/lib/modules/$kernel/vmlinuz" "$dracutsysrootdir/boot/vmlinuz-$kernel"; do
-                [[ -s $kernel_image ]] || continue
-                break
-            done
-        fi
-        if ! [[ -s $kernel_image ]]; then
-            dfatal "Can't find a kernel image '$kernel_image' to create a UEFI executable"
-            exit 1
-        fi
     fi
 fi
 
@@ -1981,7 +1867,7 @@ if [[ $kernel_only != yes ]]; then
     # shellcheck disable=SC2068
     ((${#install_optional_items[@]} > 0)) && inst_multiple -o ${install_optional_items[@]}
 
-    if [[ $kernel_cmdline ]] && [[ $uefi != yes ]]; then
+    if [[ $kernel_cmdline ]]; then
         printf "%s\n" "$kernel_cmdline" >> "${initdir}/etc/cmdline.d/01-default.conf"
     fi
 
@@ -2281,11 +2167,6 @@ fi
 
 dinfo "*** Creating image file '$outfile' ***"
 
-if [[ $uefi == yes ]]; then
-    readonly uefi_outdir="$DRACUT_TMPDIR/uefi"
-    mkdir -p "$uefi_outdir"
-fi
-
 if [[ $DRACUT_REPRODUCIBLE ]]; then
     find "$initdir" -newer "$dracutbasedir/dracut-functions.sh" -print0 \
         | xargs -r -0 touch -h -m -c -r "$dracutbasedir/dracut-functions.sh"
@@ -2410,107 +2291,12 @@ fi
 
 umask 077
 
-if [[ $uefi == yes ]]; then
-    if [[ $kernel_cmdline ]]; then
-        echo -n "$kernel_cmdline" > "$uefi_outdir/cmdline.txt"
-    elif [[ $hostonly_cmdline == yes ]]; then
-        if [ -d "$initdir/etc/cmdline.d" ]; then
-            for conf in "$initdir"/etc/cmdline.d/*.conf; do
-                [ -e "$conf" ] || continue
-                printf "%s " "$(< "$conf")" >> "$uefi_outdir/cmdline.txt"
-            done
-        elif [ -e "/proc/cmdline" ]; then
-            printf "%s " "$(< "/proc/cmdline")" > "$uefi_outdir/cmdline.txt"
-        fi
-    fi
-
-    offs=$(objdump -h "$uefi_stub" 2> /dev/null | gawk 'NF==7 {size=strtonum("0x"$3);\
-                offset=strtonum("0x"$4)} END {print size + offset}')
-    if [[ $offs -eq 0 ]]; then
-        dfatal "Failed to get the size of $uefi_stub to create UEFI image file"
-        exit 1
-    fi
-    align=$(pe_get_section_align "$uefi_stub")
-    if [[ $? -eq 1 ]]; then
-        dfatal "Failed to get the sectionAlignment of the stub PE header to create the UEFI image file"
-        exit 1
-    fi
-    offs=$((offs + "$align" - offs % "$align"))
-    [[ -s $dracutsysrootdir/usr/lib/os-release ]] && uefi_osrelease="$dracutsysrootdir/usr/lib/os-release"
-    [[ -s $dracutsysrootdir/etc/os-release ]] && uefi_osrelease="$dracutsysrootdir/etc/os-release"
-    [[ -s $uefi_osrelease ]] \
-        && uefi_osrelease_offs=${offs} \
-        && offs=$((offs + $(stat -Lc%s "$uefi_osrelease"))) \
-        && offs=$((offs + "$align" - offs % "$align"))
-
-    if [[ $kernel_cmdline ]] || [[ $hostonly_cmdline == yes && -e "${uefi_outdir}/cmdline.txt" ]]; then
-        echo -ne "\x00" >> "$uefi_outdir/cmdline.txt"
-        dinfo "Using UEFI kernel cmdline:"
-        dinfo "$(tr -d '\000' < "$uefi_outdir/cmdline.txt")"
-        uefi_cmdline="${uefi_outdir}/cmdline.txt"
-        uefi_cmdline_offs=${offs}
-        offs=$((offs + $(stat -Lc%s "$uefi_cmdline")))
-        offs=$((offs + "$align" - offs % "$align"))
-    else
-        unset uefi_cmdline
-    fi
-
-    if [[ -s ${dracutsysrootdir}${uefi_splash_image} ]]; then
-        uefi_splash_image="${dracutsysrootdir}${uefi_splash_image}"
-        uefi_splash_offs=${offs}
-        offs=$((offs + $(stat -Lc%s "$uefi_splash_image")))
-        offs=$((offs + "$align" - offs % "$align"))
-    else
-        unset uefi_splash_image
-    fi
-
-    uefi_linux_offs="${offs}"
-    offs=$((offs + $(stat -Lc%s "$kernel_image")))
-    offs=$((offs + "$align" - offs % "$align"))
-    uefi_initrd_offs="${offs}"
-
-    if objcopy \
-        ${uefi_osrelease:+--add-section .osrel="$uefi_osrelease" --change-section-vma .osrel=$(printf 0x%x "$uefi_osrelease_offs")} \
-        ${uefi_cmdline:+--add-section .cmdline="$uefi_cmdline" --change-section-vma .cmdline=$(printf 0x%x "$uefi_cmdline_offs")} \
-        ${uefi_splash_image:+--add-section .splash="$uefi_splash_image" --change-section-vma .splash=$(printf 0x%x "$uefi_splash_offs")} \
-        --add-section .linux="$kernel_image" --change-section-vma .linux="$(printf 0x%x "$uefi_linux_offs")" \
-        --add-section .initrd="${DRACUT_TMPDIR}/initramfs.img" --change-section-vma .initrd="$(printf 0x%x "$uefi_initrd_offs")" \
-        "$uefi_stub" "${uefi_outdir}/linux.efi"; then
-        if [[ -n ${uefi_secureboot_key} && -n ${uefi_secureboot_cert} ]]; then
-            if sbsign \
-                ${uefi_secureboot_engine:+--engine "$uefi_secureboot_engine"} \
-                --key "${uefi_secureboot_key}" \
-                --cert "${uefi_secureboot_cert}" \
-                --output "$outfile" "${uefi_outdir}/linux.efi" \
-                && sbverify --cert "${uefi_secureboot_cert}" "$outfile" > /dev/null 2>&1; then
-                dinfo "*** Creating signed UEFI image file '$outfile' done ***"
-            else
-                rm -f -- "$outfile"
-                dfatal "*** Creating signed UEFI image file '$outfile' failed ***"
-                exit 1
-            fi
-        else
-            if cp --reflink=auto "${uefi_outdir}/linux.efi" "$outfile"; then
-                dinfo "*** Creating UEFI image file '$outfile' done ***"
-            else
-                rm -f -- "$outfile"
-                dfatal "Creation of $outfile failed"
-                exit 1
-            fi
-        fi
-    else
-        rm -f -- "$outfile"
-        dfatal "*** Creating UEFI image file '$outfile' failed ***"
-        exit 1
-    fi
+if cp --reflink=auto "${DRACUT_TMPDIR}/initramfs.img" "$outfile"; then
+    dinfo "*** Creating initramfs image file '$outfile' done ***"
 else
-    if cp --reflink=auto "${DRACUT_TMPDIR}/initramfs.img" "$outfile"; then
-        dinfo "*** Creating initramfs image file '$outfile' done ***"
-    else
-        rm -f -- "$outfile"
-        dfatal "Creation of $outfile failed"
-        exit 1
-    fi
+    rm -f -- "$outfile"
+    dfatal "Creation of $outfile failed"
+    exit 1
 fi
 
 btrfs_uuid() {
