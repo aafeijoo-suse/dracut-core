@@ -255,8 +255,6 @@ write_fs_tab() {
         return
     fi
 
-    if type systemctl > /dev/null 2> /dev/null; then
-        systemctl daemon-reload
-        systemctl --no-block start initrd-root-fs.target
-    fi
+    systemctl daemon-reload
+    systemctl --no-block start initrd-root-fs.target
 }

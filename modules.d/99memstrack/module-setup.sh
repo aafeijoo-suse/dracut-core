@@ -1,12 +1,7 @@
 #!/bin/bash
 
 check() {
-    if ! require_binaries pgrep pkill memstrack; then
-        dinfo "memstrack is not available"
-        dinfo "If you need to use rd.memdebug>=4, please install memstrack and procps-ng"
-        return 1
-    fi
-
+    require_binaries nohup memstrack || return 1
     return 0
 }
 
@@ -16,7 +11,7 @@ depends() {
 }
 
 install() {
-    inst_multiple pgrep pkill nohup
+    inst_multiple nohup
     inst "/bin/memstrack" "/bin/memstrack"
 
     inst "$moddir/memstrack-start.sh" "/bin/memstrack-start"
