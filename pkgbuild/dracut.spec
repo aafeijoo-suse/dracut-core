@@ -386,7 +386,6 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{dracutlibdir}/modules.d/98pollcdrom
 %{dracutlibdir}/modules.d/98selinux
 %{dracutlibdir}/modules.d/98syslog
-%{dracutlibdir}/modules.d/98usrmount
 %{dracutlibdir}/modules.d/99base
 %{dracutlibdir}/modules.d/99fs-lib
 %{dracutlibdir}/modules.d/99img-lib
