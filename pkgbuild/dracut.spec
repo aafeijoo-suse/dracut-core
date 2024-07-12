@@ -98,15 +98,6 @@ This package requires everything which is needed to build an
 initramfs (using dracut) which tries to load an IMA policy during startup.
 %endif
 
-%package extra
-Summary:        Dracut modules usually not required for normal operation
-Group:          System/Base
-Requires:       %{name} = %{version}-%{release}
-
-%description extra
-This package contains all modules that are part of dracut upstream
-but are not normally supported or required.
-
 %prep
 %autosetup
 
@@ -243,21 +234,6 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{dracutlibdir}/modules.d/96securityfs
 %{dracutlibdir}/modules.d/97masterkey
 %{dracutlibdir}/modules.d/98integrity
-%endif
-
-%files extra
-%license COPYING
-
-%{dracutlibdir}/modules.d/02caps
-%{dracutlibdir}/modules.d/05busybox
-%ifarch ppc ppc64 ppc64le ppc64p7
-%{dracutlibdir}/modules.d/90ppcmac
-%endif
-%ifarch s390 s390x
-# RH-specific s390 modules, we take another approach
-%{dracutlibdir}/modules.d/95dasd
-%{dracutlibdir}/modules.d/95zfcp
-%{dracutlibdir}/modules.d/95znet
 %endif
 
 %files
