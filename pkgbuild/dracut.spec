@@ -335,7 +335,6 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %dir %{dracutlibdir}/modules.d
 %{dracutlibdir}/modules.d/00bash
 %{dracutlibdir}/modules.d/00systemd
-%{dracutlibdir}/modules.d/00systemd-network-management
 %ifnarch s390 s390x
 %{dracutlibdir}/modules.d/00warpclock
 %endif
