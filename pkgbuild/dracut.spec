@@ -265,9 +265,7 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %files extra
 %license COPYING
 
-%{dracutlibdir}/modules.d/00mksh
 %{dracutlibdir}/modules.d/02caps
-%{dracutlibdir}/modules.d/00dash
 %{dracutlibdir}/modules.d/05busybox
 %ifarch ppc ppc64 ppc64le ppc64p7
 %{dracutlibdir}/modules.d/90ppcmac
