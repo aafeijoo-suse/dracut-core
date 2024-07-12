@@ -29,10 +29,9 @@ Release:        0
 Summary:        Event driven initramfs infrastructure
 License:        GPLv2+ and LGPLv2+ and GPLv2
 Group:          System/Base
-URL:            https://github.com/dracutdevs/dracut/wiki
+URL:            https://github.com/aafeijoo-suse/dracut-mini
 Source0:        dracut-%{version}.tar.xz
 Source1:        dracut-rpmlintrc
-Source2:        README.susemaint
 BuildRequires:  asciidoc
 BuildRequires:  bash
 BuildRequires:  docbook-xsl-stylesheets
@@ -394,9 +393,6 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %endif
 %{dracutlibdir}/modules.d/80lvmmerge
 %{dracutlibdir}/modules.d/80lvmthinpool-monitor
-%exclude %{dracutlibdir}/modules.d/80test
-%exclude %{dracutlibdir}/modules.d/80test-makeroot
-%exclude %{dracutlibdir}/modules.d/80test-root
 %ifarch s390 s390x
 %{dracutlibdir}/modules.d/81cio_ignore
 %endif
