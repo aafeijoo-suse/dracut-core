@@ -352,7 +352,6 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{dracutlibdir}/modules.d/01systemd-modules-load
 %{dracutlibdir}/modules.d/01systemd-networkd
 %{dracutlibdir}/modules.d/01systemd-pcrphase
-%{dracutlibdir}/modules.d/01systemd-portabled
 %{dracutlibdir}/modules.d/01systemd-pstore
 %{dracutlibdir}/modules.d/01systemd-repart
 %{dracutlibdir}/modules.d/01systemd-resolved
