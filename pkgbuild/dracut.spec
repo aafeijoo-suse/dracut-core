@@ -363,7 +363,6 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{dracutlibdir}/modules.d/95debug
 %{dracutlibdir}/modules.d/95fcoe
 %{dracutlibdir}/modules.d/95fcoe-uefi
-%{dracutlibdir}/modules.d/95fstab-sys
 %{dracutlibdir}/modules.d/95iscsi
 %{dracutlibdir}/modules.d/95lunmask
 %{dracutlibdir}/modules.d/95nbd
