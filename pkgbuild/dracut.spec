@@ -114,18 +114,11 @@ initramfs (using dracut) which tries to load an IMA policy during startup.
 echo -e "#!/bin/bash\nDRACUT_VERSION=%{version}-%{release}" > %{buildroot}%{dracutlibdir}/dracut-version.sh
 
 # remove architecture specific modules
-%ifnarch ppc ppc64 ppc64le ppc64p7
-rm -rf %{buildroot}%{dracutlibdir}/modules.d/90ppcmac
-%endif
 %ifnarch s390 s390x
-rm -rf %{buildroot}%{dracutlibdir}/modules.d/80cms
 rm -rf %{buildroot}%{dracutlibdir}/modules.d/81cio_ignore
 rm -rf %{buildroot}%{dracutlibdir}/modules.d/91zipl
-rm -rf %{buildroot}%{dracutlibdir}/modules.d/95dasd
 rm -rf %{buildroot}%{dracutlibdir}/modules.d/95dasd_mod
 rm -rf %{buildroot}%{dracutlibdir}/modules.d/95dcssblk
-rm -rf %{buildroot}%{dracutlibdir}/modules.d/95zfcp
-rm -rf %{buildroot}%{dracutlibdir}/modules.d/95znet
 %else
 rm -rf %{buildroot}%{dracutlibdir}/modules.d/00warpclock
 %endif
@@ -146,14 +139,6 @@ install -m 0644 dracut.conf.d/ima.conf.example %{buildroot}%{_sysconfdir}/dracut
 install -m 0644 suse/s390x_persistent_policy.conf %{buildroot}%{_sysconfdir}/dracut.conf.d/10-persistent_policy.conf
 %else
 install -m 0644 suse/persistent_policy.conf %{buildroot}%{_sysconfdir}/dracut.conf.d/10-persistent_policy.conf
-%endif
-
-%if 0%{?suse_version}
-rm -f %{buildroot}%{dracutlibdir}/modules.d/45ifcfg/write-ifcfg.sh
-ln -s %{dracutlibdir}/modules.d/45ifcfg/write-ifcfg-suse.sh %{buildroot}%{dracutlibdir}/modules.d/45ifcfg/write-ifcfg.sh
-%else
-mv %{buildroot}%{dracutlibdir}/modules.d/45ifcfg/write-ifcfg.sh %{buildroot}%{dracutlibdir}/modules.d/45ifcfg/write-ifcfg-redhat.sh
-ln -s %{dracutlibdir}/modules.d/45ifcfg/write-ifcfg-redhat.sh %{buildroot}%{dracutlibdir}/modules.d/45ifcfg/write-ifcfg.sh
 %endif
 
 # create a link to dracut-util to be able to parse kernel command line arguments at generation time
@@ -334,14 +319,10 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{dracutlibdir}/modules.d/35network-legacy
 %{dracutlibdir}/modules.d/35network-manager
 %{dracutlibdir}/modules.d/40network
-%{dracutlibdir}/modules.d/45ifcfg
 %{dracutlibdir}/modules.d/45url-lib
 %{dracutlibdir}/modules.d/50drm
 %{dracutlibdir}/modules.d/50plymouth
 %{dracutlibdir}/modules.d/62bluetooth
-%ifarch s390 s390x
-%{dracutlibdir}/modules.d/80cms
-%endif
 %{dracutlibdir}/modules.d/80lvmmerge
 %{dracutlibdir}/modules.d/80lvmthinpool-monitor
 %ifarch s390 s390x
