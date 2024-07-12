@@ -129,16 +129,16 @@ mkdir -p %{buildroot}%{_localstatedir}/log
 touch %{buildroot}%{_localstatedir}/log/dracut.log
 
 install -D -m 0644 dracut.conf.d/suse.conf.example %{buildroot}%{dracutlibdir}/dracut.conf.d/01-dist.conf
-install -m 0644 suse/99-debug.conf %{buildroot}%{_sysconfdir}/dracut.conf.d/99-debug.conf
+install -m 0644 dracut.conf.d/debug.conf.example %{buildroot}%{_sysconfdir}/dracut.conf.d/99-debug.conf
 %ifnarch %ix86
 install -m 0644 dracut.conf.d/fips.conf.example %{buildroot}%{_sysconfdir}/dracut.conf.d/40-fips.conf
 install -m 0644 dracut.conf.d/ima.conf.example %{buildroot}%{_sysconfdir}/dracut.conf.d/40-ima.conf
 %endif
 # bsc#915218
 %ifarch s390 s390x
-install -m 0644 suse/s390x_persistent_policy.conf %{buildroot}%{_sysconfdir}/dracut.conf.d/10-persistent_policy.conf
+install -m 0644 dracut.conf.d/s390x_persistent_policy.conf.example %{buildroot}%{_sysconfdir}/dracut.conf.d/10-persistent_policy.conf
 %else
-install -m 0644 suse/persistent_policy.conf %{buildroot}%{_sysconfdir}/dracut.conf.d/10-persistent_policy.conf
+install -m 0644 dracut.conf.d/persistent_policy.conf.example %{buildroot}%{_sysconfdir}/dracut.conf.d/10-persistent_policy.conf
 %endif
 
 # create a link to dracut-util to be able to parse kernel command line arguments at generation time
