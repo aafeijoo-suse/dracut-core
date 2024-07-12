@@ -1,8 +1,6 @@
 /Makefile.inc
 /man/dracut.8
-/man/dracut-catimages.8
 /man/dracut.conf.5
-/dracut.conf.d/*.conf
 /man/dracut.cmdline.7
 /dracut.html
 /man/dracut.kernel.7
@@ -11,10 +9,6 @@
 /man/lsinitrd.1
 /dracut.pc
 /dracut-install
-/modules.d/99base/switch_root
-/test/*/test.log
-/test/*/.testdir
-test*.img
 /.buildpath
 /.project
 /dracut-version.sh
@@ -27,4 +21,3 @@ test*.img
 /src/skipcpio/skipcpio
 /src/util/util
 /dracut-util
-.idea/
