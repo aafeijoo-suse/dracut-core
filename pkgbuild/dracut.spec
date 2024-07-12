@@ -98,16 +98,6 @@ This package requires everything which is needed to build an
 initramfs (using dracut) which tries to load an IMA policy during startup.
 %endif
 
-%package tools
-Summary:        Tools to build a local initramfs
-Group:          System/Base
-Requires:       %{name}
-# split-provides for upgrade from SLES12 SP1 to SLES12 SP2
-Provides:       %{name}:%{_bindir}/dracut-catimages
-
-%description tools
-This package contains tools to assemble the local initrd and host configuration.
-
 %package extra
 Summary:        Dracut modules usually not required for normal operation
 Group:          System/Base
@@ -254,13 +244,6 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{dracutlibdir}/modules.d/97masterkey
 %{dracutlibdir}/modules.d/98integrity
 %endif
-
-%files tools
-%{_bindir}/dracut-catimages
-%{_mandir}/man8/dracut-catimages.8*
-%dir /boot/dracut
-%dir %{_localstatedir}/lib/dracut
-%dir %{_localstatedir}/lib/dracut/overlay
 
 %files extra
 %license COPYING
