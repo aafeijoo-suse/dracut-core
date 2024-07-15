@@ -1,7 +1,7 @@
 #
-# spec file for package dracut
+# spec file for package dracut-mini
 #
-# Copyright (c) 2022 SUSE LLC
+# Copyright (c) 2024 SUSE LLC
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -24,7 +24,7 @@
 %endif
 
 Name:           dracut
-Version:        059
+Version:        1
 Release:        0
 Summary:        Event driven initramfs infrastructure
 License:        GPLv2+ and LGPLv2+ and GPLv2
@@ -67,14 +67,14 @@ Conflicts:      suse-module-tools < 15.4.7
 %{?systemd_requires}
 
 %description
-Dracut contains tools to create a bootable initramfs for Linux kernels >= 2.6.
-Dracut contains various modules which are driven by the event-based udev
+dracut contains tools to create a bootable initramfs for Linux kernels >= 2.6.
+dracut contains various modules which are driven by the event-based udev
 and systemd. Having root on MD, DM, LVM2, LUKS is supported as well as
 NFS, iSCSI, NBD, FCoE.
 
 %ifnarch %ix86
 %package fips
-Summary:        Dracut modules to build a dracut initramfs with an integrity check
+Summary:        dracut modules to build a dracut initramfs with an integrity check
 Group:          System/Base
 Requires:       %{name} = %{version}-%{release}
 Requires:       libkcapi-tools
@@ -87,7 +87,7 @@ and its cryptography during startup.
 
 %ifnarch %ix86
 %package ima
-Summary:        Dracut modules to build a dracut initramfs with IMA
+Summary:        dracut modules to build a dracut initramfs with IMA
 Group:          System/Base
 Requires:       %{name} = %{version}-%{release}
 Requires:       evmctl
@@ -97,6 +97,21 @@ Requires:       keyutils
 This package requires everything which is needed to build an
 initramfs (using dracut) which tries to load an IMA policy during startup.
 %endif
+
+%package network
+Summary:        dracut modules to build a dracut initramfs with network support
+Group:          System/Base
+Requires:       %{name} = %{version}-%{release}
+# network-legacy  => iputils or arping2 or wicked
+# network-manager => NetworkManager
+Requires:       (iputils or arping2 or wicked or NetworkManager)
+# NetworkManager >= 1.20 has an internal DHCP client
+Requires:       (dhcp-client if NetworkManager < 1.20)
+Requires:       (jq if nvme-cli)
+
+%description network
+This package requires everything which is needed to build an initramfs with
+dracut with network support.
 
 %prep
 %autosetup
@@ -179,6 +194,9 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{?regenerate_initrd_post}
 %endif
 
+%post network
+%{?regenerate_initrd_post}
+
 %postun
 %{?regenerate_initrd_post}
 
@@ -192,6 +210,9 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{?regenerate_initrd_post}
 %endif
 
+%postun network
+%{?regenerate_initrd_post}
+
 %posttrans
 %{?regenerate_initrd_posttrans}
 
@@ -204,6 +225,9 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %posttrans ima
 %{?regenerate_initrd_posttrans}
 %endif
+
+%posttrans network
+%{?regenerate_initrd_posttrans}
 
 %ifnarch %ix86
 %files fips
@@ -220,6 +244,24 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{dracutlibdir}/modules.d/97masterkey
 %{dracutlibdir}/modules.d/98integrity
 %endif
+
+%files network
+%license COPYING
+%{dracutlibdir}/modules.d/35network-legacy
+%{dracutlibdir}/modules.d/35network-manager
+%{dracutlibdir}/modules.d/40network
+%{dracutlibdir}/modules.d/45url-lib
+%{dracutlibdir}/modules.d/90kernel-network-modules
+%{dracutlibdir}/modules.d/90livenet
+%{dracutlibdir}/modules.d/90qemu-net
+%{dracutlibdir}/modules.d/95cifs
+%{dracutlibdir}/modules.d/95fcoe
+%{dracutlibdir}/modules.d/95fcoe-uefi
+%{dracutlibdir}/modules.d/95iscsi
+%{dracutlibdir}/modules.d/95nbd
+%{dracutlibdir}/modules.d/95nfs
+%{dracutlibdir}/modules.d/95nvmf
+%{dracutlibdir}/modules.d/95ssh-client
 
 %files
 %license COPYING
@@ -310,10 +352,6 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{dracutlibdir}/modules.d/09dbus
 %{dracutlibdir}/modules.d/10i18n
 %{dracutlibdir}/modules.d/30convertfs
-%{dracutlibdir}/modules.d/35network-legacy
-%{dracutlibdir}/modules.d/35network-manager
-%{dracutlibdir}/modules.d/40network
-%{dracutlibdir}/modules.d/45url-lib
 %{dracutlibdir}/modules.d/50drm
 %{dracutlibdir}/modules.d/50plymouth
 %{dracutlibdir}/modules.d/62bluetooth
@@ -331,15 +369,12 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{dracutlibdir}/modules.d/90dmsquash-live-ntfs
 %{dracutlibdir}/modules.d/90kernel-modules-extra
 %{dracutlibdir}/modules.d/90kernel-modules
-%{dracutlibdir}/modules.d/90kernel-network-modules
-%{dracutlibdir}/modules.d/90livenet
 %{dracutlibdir}/modules.d/90lvm
 %{dracutlibdir}/modules.d/90mdraid
 %{dracutlibdir}/modules.d/90multipath
 %{dracutlibdir}/modules.d/90nvdimm
 %{dracutlibdir}/modules.d/90overlayfs
 %{dracutlibdir}/modules.d/90qemu
-%{dracutlibdir}/modules.d/90qemu-net
 %{dracutlibdir}/modules.d/91crypt-gpg
 %{dracutlibdir}/modules.d/91crypt-loop
 %{dracutlibdir}/modules.d/91fido2
@@ -349,22 +384,14 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %ifarch s390 s390x
 %{dracutlibdir}/modules.d/91zipl
 %endif
-%{dracutlibdir}/modules.d/95cifs
 %ifarch s390 s390x
 %{dracutlibdir}/modules.d/95dasd_mod
 %{dracutlibdir}/modules.d/95dcssblk
 %endif
 %{dracutlibdir}/modules.d/95debug
-%{dracutlibdir}/modules.d/95fcoe
-%{dracutlibdir}/modules.d/95fcoe-uefi
-%{dracutlibdir}/modules.d/95iscsi
 %{dracutlibdir}/modules.d/95lunmask
-%{dracutlibdir}/modules.d/95nbd
-%{dracutlibdir}/modules.d/95nfs
-%{dracutlibdir}/modules.d/95nvmf
 %{dracutlibdir}/modules.d/95resume
 %{dracutlibdir}/modules.d/95rootfs-block
-%{dracutlibdir}/modules.d/95ssh-client
 %{dracutlibdir}/modules.d/95terminfo
 %{dracutlibdir}/modules.d/95udev-rules
 %{dracutlibdir}/modules.d/95virtfs
