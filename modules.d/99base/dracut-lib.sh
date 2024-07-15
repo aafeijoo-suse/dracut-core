@@ -833,33 +833,6 @@ need_shutdown() {
     : > /run/initramfs/.need_shutdown
 }
 
-wait_for_loginit() {
-    [ "$RD_DEBUG" = "yes" ] || return
-    [ -e /run/initramfs/loginit.pipe ] || return
-    debug_off
-    echo "DRACUT_LOG_END"
-    exec 0<> /dev/console 1<> /dev/console 2<> /dev/console
-    # wait for loginit
-    i=0
-    while [ $i -lt 10 ]; do
-        if [ ! -e /run/initramfs/loginit.pipe ]; then
-            j=$(jobs)
-            [ -z "$j" ] && break
-            [ -z "${j##*Running*}" ] || break
-        fi
-        sleep 0.1
-        i=$((i + 1))
-    done
-
-    if [ $i -eq 10 ]; then
-        kill %1 > /dev/null 2>&1
-        kill "$(while read -r line || [ -n "$line" ]; do echo "$line"; done < /run/initramfs/loginit.pid)"
-    fi
-
-    setdebug
-    rm -f -- /run/initramfs/loginit.pipe /run/initramfs/loginit.pid
-}
-
 # pidof version for root
 if ! command -v pidof > /dev/null 2> /dev/null; then
     pidof() {
