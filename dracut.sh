@@ -1511,7 +1511,6 @@ if [[ $hostonly ]] && [[ $hostonly_default_device != "no" ]]; then
         "/usr/lib" \
         "/usr/lib64" \
         "/boot" \
-        "/boot/efi" \
         "/boot/zipl"; do
         mp=$(readlink -f "$dracutsysrootdir$mp")
         mountpoint "$mp" > /dev/null 2>&1 || continue
