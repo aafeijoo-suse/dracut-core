@@ -215,6 +215,7 @@ nbft_parse() {
         done
         j=$((j + 1))
     done >> /etc/cmdline.d/40-nbft.conf
+    setcmdline
 }
 
 if getargbool 0 rd.nonvmf; then
@@ -224,6 +225,7 @@ fi
 
 if getargbool 0 rd.nvmf.nostatic; then
     rm -f /etc/cmdline.d/95nvmf-args.conf
+    setcmdline
     rm -f /etc/nvme/discovery.conf /etc/nvme/config.json
 fi
 
@@ -316,6 +318,7 @@ done
 
 if [ -e /tmp/nvmf_needs_network ] || [ -e /tmp/valid_nbft_entry_found ]; then
     echo "rd.neednet=1" > /etc/cmdline.d/nvmf-neednet.conf
+    setcmdline
     # netroot is a global variable that is present in all "sourced" scripts
     # shellcheck disable=SC2034
     netroot=nbft

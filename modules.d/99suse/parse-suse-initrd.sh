@@ -14,30 +14,32 @@ if [ "$sysrq" ] && [ "$sysrq" != "no" ]; then
     esac
 fi
 
+cmdline_changed=
+
 # debug
 if getarg linuxrc=trace; then
     echo "rd.debug rd.udev.debug" >> /etc/cmdline.d/99-suse.conf
-    unset CMDLINE
+    cmdline_changed=1
 fi
 
 # debug shell
 if getargbool 0 shell; then
     echo "rd.break" >> /etc/cmdline.d/99-suse.conf
-    unset CMDLINE
+    cmdline_changed=1
 fi
 
 # journaldev
 journaldev=$(getarg journaldev)
 if [ -n "$journaldev" ]; then
     echo "root.journaldev=$journaldev" >> /etc/cmdline.d/99-suse.conf
-    unset CMDLINE
+    cmdline_changed=1
 fi
 
 # mduuid
 mduuid=$(getarg mduuid)
 if [ -n "$mduuid" ]; then
     echo "rd.md.uuid=$mduuid" >> /etc/cmdline.d/99-suse.conf
-    unset CMDLINE
+    cmdline_changed=1
 fi
 
 # TargetAddress / TargetPort / TargetName
@@ -47,5 +49,11 @@ TargetName=$(getarg TargetName)
 
 if [ -n "$TargetAddress" -a -n "$TargetName" ]; then
     echo "netroot=iscsi:$TargetAddress::$TargetPort::$TargetName" >> /etc/cmdline.d/99-suse.conf
-    unset CMDLINE
+    cmdline_changed=1
 fi
+
+if [ -n "$cmdline_changed" ]; then
+    setcmdline
+fi
+
+unset cmdline_changed

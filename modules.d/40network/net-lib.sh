@@ -239,6 +239,7 @@ set_ifname() {
         break
     done
     echo "ifname=$name$num:$mac" >> /etc/cmdline.d/45-ifname.conf
+    setcmdline
     echo "$num" > "/tmp/set_ifname_$name"
     echo "$name$num"
 }
@@ -358,6 +359,7 @@ ibft_to_cmdline() {
 
         done
     ) >> /etc/cmdline.d/40-ibft.conf
+    setcmdline
 }
 
 parse_iscsi_root() {
