@@ -84,6 +84,23 @@ install() {
         "$systemdsystemunitdir"/sysinit.target.wants/systemd-udev-trigger.service \
         udevadm
 
+    # Add groups required by udev rules.
+    {
+        grep '^audio:' "$dracutsysrootdir"/etc/group 2> /dev/null
+        grep '^cdrom:' "$dracutsysrootdir"/etc/group 2> /dev/null
+        grep '^dialout:' "$dracutsysrootdir"/etc/group 2> /dev/null
+        grep '^disk:' "$dracutsysrootdir"/etc/group 2> /dev/null
+        grep '^input:' "$dracutsysrootdir"/etc/group 2> /dev/null
+        grep '^kmem:' "$dracutsysrootdir"/etc/group 2> /dev/null
+        grep '^kvm:' "$dracutsysrootdir"/etc/group 2> /dev/null
+        grep '^lp:' "$dracutsysrootdir"/etc/group 2> /dev/null
+        grep '^render:' "$dracutsysrootdir"/etc/group 2> /dev/null
+        grep '^sgx:' "$dracutsysrootdir"/etc/group 2> /dev/null
+        grep '^tape:' "$dracutsysrootdir"/etc/group 2> /dev/null
+        grep '^tty:' "$dracutsysrootdir"/etc/group 2> /dev/null
+        grep '^video:' "$dracutsysrootdir"/etc/group 2> /dev/null
+    } >> "$initdir/etc/group"
+
     # Install the hosts local user configurations if enabled.
     if [[ $hostonly ]]; then
         inst_multiple -H -o \

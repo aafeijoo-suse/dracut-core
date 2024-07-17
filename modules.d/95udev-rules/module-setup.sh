@@ -30,18 +30,7 @@ install() {
     prepare_udev_rules 59-persistent-storage.rules 61-persistent-storage.rules
 
     {
-        for i in cdrom tape dialout floppy; do
-            if ! grep -q "^$i:" "$initdir"/etc/group 2> /dev/null; then
-                if ! grep "^$i:" "$dracutsysrootdir"/etc/group 2> /dev/null; then
-                    case $i in
-                        cdrom) echo "$i:x:11:" ;;
-                        dialout) echo "$i:x:18:" ;;
-                        floppy) echo "$i:x:19:" ;;
-                        tape) echo "$i:x:33:" ;;
-                    esac
-                fi
-            fi
-        done
+        grep '^floppy:' "$dracutsysrootdir"/etc/group 2> /dev/null
     } >> "$initdir/etc/group"
 
     inst_multiple -o \
