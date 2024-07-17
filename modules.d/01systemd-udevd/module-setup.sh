@@ -19,8 +19,6 @@ check() {
 # Module dependency requirements.
 depends() {
 
-    # This module has external dependency on other module(s).
-    echo systemd
     # Return 0 to include the dependent module(s) in the initramfs.
     return 0
 
@@ -60,12 +58,16 @@ install() {
         "$udevrulesdir"/70-memory.rules \
         "$udevrulesdir"/70-mouse.rules \
         "$udevrulesdir"/70-touchpad.rules \
+        "$udevrulesdir"/70-uaccess.rules \
+        "$udevrulesdir"/71-seat.rules \
+        "$udevrulesdir"/73-seat-late.rules \
         "$udevrulesdir"/75-net-description.rules \
         "$udevrulesdir"/75-probe_mtd.rules \
         "$udevrulesdir"/78-sound-card.rules \
         "$udevrulesdir"/80-drivers.rules \
         "$udevrulesdir"/80-net-setup-link.rules \
         "$udevrulesdir"/81-net-dhcp.rules \
+        "$udevrulesdir"/90-vconsole.rules \
         "$udevrulesdir"/99-systemd.rules \
         "$systemdutildir"/systemd-udevd \
         "$systemdsystemunitdir"/systemd-udevd.service \

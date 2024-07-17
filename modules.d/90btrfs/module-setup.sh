@@ -18,7 +18,6 @@ check() {
 
 # called by dracut
 depends() {
-    echo udev-rules
     return 0
 }
 
