@@ -13,7 +13,7 @@ depends() {
 
 # called by dracut
 install() {
-    if ! dracut_module_included "systemd"; then
+    if ! dracut_module_included "dracut-systemd"; then
         dfatal "systemd is required"
         exit 1
     fi
