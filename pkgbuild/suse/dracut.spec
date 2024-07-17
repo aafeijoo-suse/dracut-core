@@ -266,8 +266,7 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %files
 %license COPYING
 %doc README.md NEWS.md AUTHORS dracut.html
-%doc docs/README.cross docs/README.generic docs/README.kernel
-%doc docs/HACKING.md docs/dracut.png docs/dracut.svg
+%doc docs/HACKING.md
 %{_bindir}/dracut
 %{_bindir}/lsinitrd
 %dir %{_datadir}/bash-completion
