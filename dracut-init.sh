@@ -586,37 +586,14 @@ build_ld_cache() {
 }
 
 prepare_udev_rules() {
-    if [ -z "$UDEVVERSION" ]; then
-        UDEVVERSION=$(udevadm --version)
-        export UDEVVERSION
-    fi
-
-    if [ -z "$UDEVVERSION" ]; then
-        derror "Failed to detect udev version!"
-        return 1
-    fi
-    if [ -z "${UDEVVERSION##*[!0-9]*}" ]; then
-        derror "udevadm --version did not report an integer, udev version cannot be determined!"
-        return 1
-    fi
-
     for f in "$@"; do
         f="${initdir}/etc/udev/rules.d/$f"
         [ -e "$f" ] || continue
         while read -r line || [ -n "$line" ]; do
             if [ "${line%%IMPORT PATH_ID}" != "$line" ]; then
-                if ((UDEVVERSION >= 174)); then
-                    printf '%sIMPORT{builtin}="path_id"\n' "${line%%IMPORT PATH_ID}"
-                else
-                    printf '%sIMPORT{program}="path_id %%p"\n' "${line%%IMPORT PATH_ID}"
-                fi
+                printf '%sIMPORT{builtin}="path_id"\n' "${line%%IMPORT PATH_ID}"
             elif [ "${line%%IMPORT BLKID}" != "$line" ]; then
-                if ((UDEVVERSION >= 176)); then
-                    printf '%sIMPORT{builtin}="blkid"\n' "${line%%IMPORT BLKID}"
-                else
-                    # shellcheck disable=SC2016
-                    printf '%sIMPORT{program}="/sbin/blkid -o udev -p $tempnode"\n' "${line%%IMPORT BLKID}"
-                fi
+                printf '%sIMPORT{builtin}="blkid"\n' "${line%%IMPORT BLKID}"
             else
                 echo "$line"
             fi
