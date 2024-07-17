@@ -7,16 +7,12 @@ check() {
 
 # called by dracut
 depends() {
-    echo udev-rules
+    echo dracut-systemd
     return 0
 }
 
 # called by dracut
 install() {
-    if ! dracut_module_included "dracut-systemd"; then
-        dfatal "systemd is required"
-        exit 1
-    fi
 
     inst_multiple mount mknod mkdir sleep chown \
         sed ls flock cp mv dmesg rm ln rmmod mkfifo umount readlink setsid \
