@@ -24,7 +24,7 @@
 %endif
 
 Name:           dracut
-Version:        1
+Version:        061
 Release:        0
 Summary:        Event driven initramfs infrastructure
 License:        GPLv2+ and LGPLv2+ and GPLv2
