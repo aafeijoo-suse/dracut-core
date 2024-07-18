@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if ! getargbool 1 rd.fcoe -d -n rd.nofcoe; then
+if ! getargbool 1 rd.fcoe; then
     info "rd.fcoe=0: skipping lldpad activation"
     return 0
 fi

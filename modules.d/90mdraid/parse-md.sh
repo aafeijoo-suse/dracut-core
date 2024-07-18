@@ -2,12 +2,12 @@
 # we really need to use `expr substr` with dash
 # shellcheck disable=SC2003 disable=SC2308
 
-MD_UUID=$(getargs rd.md.uuid -d rd_MD_UUID=)
+MD_UUID=$(getargs rd.md.uuid)
 # normalize the uuid
 MD_UUID=$(str_replace "$MD_UUID" "-" "")
 MD_UUID=$(str_replace "$MD_UUID" ":" "")
 
-if { [ -z "$MD_UUID" ] && ! getargbool 0 rd.auto; } || ! getargbool 1 rd.md -d -n rd_NO_MD; then
+if { [ -z "$MD_UUID" ] && ! getargbool 0 rd.auto; } || ! getargbool 1 rd.md; then
     info "rd.md=0: removing MD RAID activation"
     udevproperty rd_NO_MD=1
 else
@@ -40,25 +40,25 @@ else
     fi
 fi
 
-if [ -e /etc/mdadm.conf ] && getargbool 1 rd.md.conf -d -n rd_NO_MDADMCONF; then
+if [ -e /etc/mdadm.conf ] && getargbool 1 rd.md.conf; then
     udevproperty rd_MDADMCONF=1
     rm -f -- "$hookdir"/pre-pivot/*mdraid-cleanup.sh
 fi
 
-if ! getargbool 1 rd.md.conf -d -n rd_NO_MDADMCONF; then
+if ! getargbool 1 rd.md.conf; then
     rm -f -- /etc/mdadm/mdadm.conf /etc/mdadm.conf
     ln -s "$(command -v mdraid-cleanup)" "$hookdir"/pre-pivot/31-mdraid-cleanup.sh 2> /dev/null
 fi
 
 # noiswmd nodmraid for anaconda / rc.sysinit compatibility
 # note nodmraid really means nobiosraid, so we don't want MDIMSM then either
-if ! getargbool 1 rd.md.imsm -d -n rd_NO_MDIMSM -n noiswmd -n nodmraid; then
+if ! getargbool 1 rd.md.imsm; then
     info "no MD RAID for imsm/isw raids"
     udevproperty rd_NO_MDIMSM=1
 fi
 
 # same thing with ddf containers
-if ! getargbool 1 rd.md.ddf -n rd_NO_MDDDF -n noddfmd -n nodmraid; then
+if ! getargbool 1 rd.md.ddf; then
     info "no MD RAID for SNIA ddf raids"
     udevproperty rd_NO_MDDDF=1
 fi

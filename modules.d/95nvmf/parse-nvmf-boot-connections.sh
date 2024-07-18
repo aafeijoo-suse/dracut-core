@@ -299,17 +299,17 @@ parse_nvmf_discover() {
     return 0
 }
 
-nvmf_hostnqn=$(getarg rd.nvmf.hostnqn -d nvmf.hostnqn=)
+nvmf_hostnqn=$(getarg rd.nvmf.hostnqn)
 if [ -n "$nvmf_hostnqn" ]; then
     echo "$nvmf_hostnqn" > /etc/nvme/hostnqn
 fi
-nvmf_hostid=$(getarg rd.nvmf.hostid -d nvmf.hostid=)
+nvmf_hostid=$(getarg rd.nvmf.hostid)
 if [ -n "$nvmf_hostid" ]; then
     echo "$nvmf_hostid" > /etc/nvme/hostid
 fi
 
 rm -f /tmp/nvmf-fc-auto
-for d in $(getargs rd.nvmf.discover -d nvmf.discover=); do
+for d in $(getargs rd.nvmf.discover); do
     parse_nvmf_discover "$d" || {
         : > /tmp/nvmf-fc-auto
         break

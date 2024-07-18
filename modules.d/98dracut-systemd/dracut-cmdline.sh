@@ -19,9 +19,9 @@ fi
 
 info "Using kernel command line parameters:" "$(getcmdline)"
 
-getargbool 0 rd.udev.log_level=info -d rd.udev.log-priority=info -d rd.udev.info -d -y rdudevinfo \
+getargbool 0 rd.udev.log_level=info -d rd.udev.log-priority=info \
     && echo 'udev_log="info"' >> /etc/udev/udev.conf
-getargbool 0 rd.udev.log_level=debug -d rd.udev.log-priority=debug -d rd.udev.debug -d -y rdudevdebug \
+getargbool 0 rd.udev.log_level=debug -d rd.udev.log-priority=debug \
     && echo 'udev_log="debug"' >> /etc/udev/udev.conf
 
 source_conf /etc/conf.d
@@ -49,7 +49,7 @@ export fstype
 
 make_trace_mem "hook cmdline" '1+:mem' '1+:iomem' '3+:slab'
 # run scriptlets to parse the command line
-getargs 'rd.break=cmdline' -d 'rdbreak=cmdline' && emergency_shell -n cmdline "Break before cmdline"
+getargs 'rd.break=cmdline' && emergency_shell -n cmdline "Break before cmdline"
 source_hook cmdline
 
 [ -f /lib/dracut/parse-resume.sh ] && . /lib/dracut/parse-resume.sh

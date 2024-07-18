@@ -27,7 +27,7 @@ if [ -z "$netroot" ]; then
     fi
 fi
 [ -z "$iscsiroot" ] && iscsiroot=$(getarg iscsiroot=)
-[ -z "$iscsi_firmware" ] && getargbool 0 rd.iscsi.firmware -y iscsi_firmware && iscsi_firmware="1"
+[ -z "$iscsi_firmware" ] && getargbool 0 rd.iscsi.firmware && iscsi_firmware="1"
 
 [ -n "$iscsiroot" ] && [ -n "$iscsi_firmware" ] && die "Mixing iscsiroot and iscsi_firmware is dangerous"
 
@@ -103,7 +103,7 @@ if [ -n "$netroot" ] && [ "$root" != "/dev/root" ] && [ "$root" != "dhcp" ]; the
     fi
 fi
 
-if arg=$(getarg rd.iscsi.initiator -d iscsi_initiator=) && [ -n "$arg" ] && ! [ -f /run/initiatorname.iscsi ]; then
+if arg=$(getarg rd.iscsi.initiator) && [ -n "$arg" ] && ! [ -f /run/initiatorname.iscsi ]; then
     iscsi_initiator=$arg
     echo "InitiatorName=$iscsi_initiator" > /run/initiatorname.iscsi
     ln -fs /run/initiatorname.iscsi /dev/.initiatorname.iscsi

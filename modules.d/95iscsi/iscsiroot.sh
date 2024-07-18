@@ -95,19 +95,19 @@ handle_netroot() {
     local login_retry_max_seen=
 
     # override conf settings by command line options
-    arg=$(getarg rd.iscsi.initiator -d iscsi_initiator=)
+    arg=$(getarg rd.iscsi.initiator)
     [ -n "$arg" ] && iscsi_initiator=$arg
-    arg=$(getarg rd.iscsi.target.group -d iscsi_target_group=)
+    arg=$(getarg rd.iscsi.target.group)
     [ -n "$arg" ] && iscsi_target_group=$arg
-    arg=$(getarg rd.iscsi.username -d iscsi_username=)
+    arg=$(getarg rd.iscsi.username)
     [ -n "$arg" ] && iscsi_username=$arg
-    arg=$(getarg rd.iscsi.password -d iscsi_password)
+    arg=$(getarg rd.iscsi.password)
     [ -n "$arg" ] && iscsi_password=$arg
-    arg=$(getarg rd.iscsi.in.username -d iscsi_in_username=)
+    arg=$(getarg rd.iscsi.in.username)
     [ -n "$arg" ] && iscsi_in_username=$arg
-    arg=$(getarg rd.iscsi.in.password -d iscsi_in_password=)
+    arg=$(getarg rd.iscsi.in.password)
     [ -n "$arg" ] && iscsi_in_password=$arg
-    for p in $(getargs rd.iscsi.param -d iscsi_param); do
+    for p in $(getargs rd.iscsi.param); do
         [ "${p%=*}" = node.session.initial_login_retry_max ] \
             && login_retry_max_seen=yes
         iscsi_param="$iscsi_param $p"
@@ -265,7 +265,7 @@ if [ "$netif" = "timeout" ] && all_ifaces_setup; then
     sleep 2
 fi
 
-if getargbool 0 rd.iscsi.firmware -d -y iscsi_firmware; then
+if getargbool 0 rd.iscsi.firmware; then
     if [ "$netif" = "timeout" ] || [ "$netif" = "online" ] || [ "$netif" = "dummy" ]; then
         [ -f /tmp/session-retry ] || echo 1 > /tmp/session-retry
         handle_firmware

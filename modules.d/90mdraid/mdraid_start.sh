@@ -35,7 +35,7 @@ _md_force_run() {
     local _LEFT_UUID
     local _uuid
 
-    _MD_UUID=$(getargs rd.md.uuid -d rd_MD_UUID=)
+    _MD_UUID=$(getargs rd.md.uuid)
     [ -n "$_MD_UUID" ] || getargbool 0 rd.auto || return
 
     if [ -n "$_MD_UUID" ]; then

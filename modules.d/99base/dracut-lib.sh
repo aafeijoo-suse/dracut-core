@@ -370,7 +370,7 @@ setdebug() {
     if [ -z "$RD_DEBUG" ]; then
         if [ -e /proc/cmdline ]; then
             RD_DEBUG=no
-            if getargbool 0 rd.debug -d -y rdinitdebug -d -y rdnetdebug; then
+            if getargbool 0 rd.debug; then
                 RD_DEBUG=yes
                 [ -n "$BASH" ] \
                     && export PS4='${BASH_SOURCE}@${LINENO}(${FUNCNAME[0]-}): '
@@ -457,8 +457,8 @@ die() {
 check_quiet() {
     if [ -z "$DRACUT_QUIET" ]; then
         DRACUT_QUIET="yes"
-        getargbool 0 rd.info -d -y rdinfo && DRACUT_QUIET="no"
-        getargbool 0 rd.debug -d -y rdinitdebug && DRACUT_QUIET="no"
+        getargbool 0 rd.info && DRACUT_QUIET="no"
+        getargbool 0 rd.debug && DRACUT_QUIET="no"
         getarg quiet || DRACUT_QUIET="yes"
         a=$(getarg loglevel=)
         [ -n "$a" ] && [ "$a" -ge 28 ] && DRACUT_QUIET="yes"
@@ -914,7 +914,7 @@ emergency_shell() {
         && [ -e /run/initramfs/.die ] \
         && _emergency_action=halt
 
-    if getargbool 1 rd.shell -d -y rdshell || getarg rd.break -d rdbreak; then
+    if getargbool 1 rd.shell || getarg rd.break; then
         _emergency_shell "$_rdshell_name"
     else
         source_hook "$hook"
