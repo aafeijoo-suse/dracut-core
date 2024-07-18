@@ -17,11 +17,6 @@ check() {
 }
 
 # called by dracut
-depends() {
-    return 0
-}
-
-# called by dracut
 cmdline() {
     # Hack for slow machines
     # see https://github.com/dracutdevs/dracut/issues/658
