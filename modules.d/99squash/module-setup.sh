@@ -1,8 +1,8 @@
 #!/bin/bash
 
 check() {
-    require_binaries mksquashfs unsquashfs || return 1
-    require_kernel_modules squashfs loop overlay || return 1
+    require_binaries -s mksquashfs unsquashfs || return 1
+    require_kernel_modules -s squashfs loop overlay || return 1
 
     return 255
 }

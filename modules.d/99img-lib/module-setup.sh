@@ -3,7 +3,7 @@
 
 # called by dracut
 check() {
-    require_binaries tar gzip dd echo tr || return 1
+    require_binaries -s tar gzip dd echo tr || return 1
     return 255
 }
 

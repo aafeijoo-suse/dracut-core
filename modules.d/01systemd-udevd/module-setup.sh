@@ -6,7 +6,7 @@
 check() {
 
     # If the binary(s) requirements are not fulfilled the module can't be installed.
-    require_binaries \
+    require_binaries -s \
         udevadm \
         "$systemdutildir"/systemd-udevd \
         || return 1

@@ -3,7 +3,7 @@
 # GPG support is optional
 # called by dracut
 check() {
-    require_binaries gpg tr || return 1
+    require_binaries -s gpg tr || return 1
 
     if sc_requested; then
         if ! sc_supported; then

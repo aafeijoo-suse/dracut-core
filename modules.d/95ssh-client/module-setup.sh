@@ -7,7 +7,7 @@ check() {
     [[ $mount_needs ]] && return 1
 
     # If our prerequisites are not met, fail.
-    require_binaries ssh scp || return 1
+    require_binaries -s ssh scp || return 1
 
     if [[ $sshkey ]]; then
         [[ ! -f $dracutsysrootdir$sshkey ]] && {

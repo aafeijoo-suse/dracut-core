@@ -19,7 +19,7 @@ depends() {
         fi
     done
 
-    if check_module "dbus-broker"; then
+    if check_module "dbus-broker" 1; then
         echo "dbus-broker"
         return 0
     else

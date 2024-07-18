@@ -3,7 +3,7 @@
 # called by dracut
 check() {
     # No point trying to support lvm if the binaries are missing
-    require_binaries lvm dd swapoff || return 1
+    require_binaries -s lvm dd swapoff || return 1
 
     return 255
 }

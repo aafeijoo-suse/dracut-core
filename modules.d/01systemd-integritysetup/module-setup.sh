@@ -6,7 +6,7 @@
 check() {
 
     # If the binary(s) requirements are not fulfilled the module can't be installed.
-    require_binaries \
+    require_binaries -s \
         "$systemdutildir"/systemd-integritysetup \
         "$systemdutildir"/system-generators/systemd-integritysetup-generator \
         || return 1

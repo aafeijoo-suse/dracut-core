@@ -104,12 +104,17 @@ if ! [[ $libdirs ]]; then
     export libdirs
 fi
 
+# require_binaries [-s] [-m <module name>] <binary> [<binary>...]
 # helper function for check() in module-setup.sh
 # to check for required installed binaries
 # issues a standardized warning message
+# -m <module name> name of dracut module
+# -s silent
 require_binaries() {
     # shellcheck disable=SC2154
     local _module_name="${moddir##*/}"
+    local _silent
+    local _msg
     local _ret=0
 
     if [[ $1 == "-m" ]]; then
@@ -117,22 +122,42 @@ require_binaries() {
         shift 2
     fi
 
+    if [[ $1 == "-s" ]]; then
+        [[ $verbose_check == 1 ]] || _silent=1
+        shift 1
+    fi
+
     for cmd in "$@"; do
         if ! find_binary "$cmd" &> /dev/null; then
-            dinfo "Module '${_module_name#[0-9][0-9]}' will not be installed, because command '$cmd' could not be found!"
+            _msg="Module '${_module_name#[0-9][0-9]}' will not be installed, because command '$cmd' could not be found!"
+            if [[ $_silent == 1 ]]; then
+                ddebug "$_msg"
+            else
+                dinfo "$_msg"
+            fi
             ((_ret++))
         fi
     done
     return "$_ret"
 }
 
+# require_any_binary [-s] [-m <module name>] <binary> [<binary>...]
+# -m <module name> name of dracut module
+# -s silent
 require_any_binary() {
     local _module_name="${moddir##*/}"
+    local _silent
+    local _msg
     local _ret=1
 
     if [[ $1 == "-m" ]]; then
         _module_name="$2"
         shift 2
+    fi
+
+    if [[ $1 == "-s" ]]; then
+        [[ $verbose_check == 1 ]] || _silent=1
+        shift 1
     fi
 
     for cmd in "$@"; do
@@ -143,19 +168,29 @@ require_any_binary() {
     done
 
     if ((_ret != 0)); then
-        dinfo "$_module_name: Could not find any command of '$*'!"
+        _msg="$_module_name: Could not find any command of '$*'!"
+        if [[ $_silent == 1 ]]; then
+            ddebug "$_msg"
+        else
+            dinfo "$_msg"
+        fi
         return 1
     fi
 
     return 0
 }
 
+# require_kernel_modules [-s] [-m <module name>] <kernel module> [<kernel module>...]
 # helper function for check() in module-setup.sh
 # to check for required kernel modules
 # issues a standardized warning message
+# -m <module name> name of dracut module
+# -s silent
 require_kernel_modules() {
     # shellcheck disable=SC2154
     local _module_name="${moddir##*/}"
+    local _silent
+    local _msg
     local _ret=0
 
     # Ignore kernel module requirement for no-kernel build
@@ -166,9 +201,19 @@ require_kernel_modules() {
         shift 2
     fi
 
+    if [[ $1 == "-s" ]]; then
+        [[ $verbose_check == 1 ]] || _silent=1
+        shift 1
+    fi
+
     for mod in "$@"; do
         if ! check_kernel_module "$mod" &> /dev/null; then
-            dinfo "Module '${_module_name#[0-9][0-9]}' will not be installed, because kernel module '$mod' is not available!"
+            _msg="Module '${_module_name#[0-9][0-9]}' will not be installed, because kernel module '$mod' is not available!"
+            if [[ $_silent == 1 ]]; then
+                ddebug "$_msg"
+            else
+                dinfo "$_msg"
+            fi
             ((_ret++))
         fi
     done
@@ -910,7 +955,12 @@ check_mount() {
     # This should never happen, but...
     [[ -d $_moddir ]] || return 1
 
-    [[ $2 ]] || mods_checked_as_dep+=" $_mod "
+    if [[ $2 ]]; then
+        unset verbose_check
+    else
+        mods_checked_as_dep+=" $_mod "
+        export verbose_check=1
+    fi
 
     # shellcheck disable=SC2154
     if [[ " $omit_dracutmodules " == *\ $_mod\ * ]]; then
@@ -918,6 +968,7 @@ check_mount() {
     fi
 
     if [[ " $dracutmodules $add_dracutmodules $force_add_dracutmodules" == *\ $_mod\ * ]]; then
+        export verbose_check=1
         module_check_mount "$_mod" "$_moddir"
         _ret=$?
 
@@ -976,7 +1027,12 @@ check_module() {
     # This should never happen, but...
     [[ -d $_moddir ]] || return 1
 
-    [[ $2 ]] || mods_checked_as_dep+=" $_mod "
+    if [[ $2 ]]; then
+        unset verbose_check
+    else
+        mods_checked_as_dep+=" $_mod "
+        export verbose_check=1
+    fi
 
     if [[ " $omit_dracutmodules " == *\ $_mod\ * ]]; then
         ddebug "Module '$_mod' will not be installed, because it's in the list to be omitted!"
@@ -984,6 +1040,7 @@ check_module() {
     fi
 
     if [[ " $dracutmodules $add_dracutmodules $force_add_dracutmodules" == *\ $_mod\ * ]]; then
+        export verbose_check=1
         if [[ " $dracutmodules $force_add_dracutmodules " == *\ $_mod\ * ]]; then
             module_check "$_mod" 1 "$_moddir"
             _ret=$?

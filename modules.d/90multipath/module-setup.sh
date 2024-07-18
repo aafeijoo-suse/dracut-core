@@ -31,8 +31,10 @@ check() {
     }
 
     # if there's no multipath binary, no go.
-    require_binaries multipath || return 1
-    require_binaries kpartx || return 1
+    require_binaries \
+        multipath \
+        kpartx \
+        || return 1
 
     if [[ $_any_mpath_dev != 0 ]] && [[ ! -f /etc/multipath.conf ]]; then
         dwarn "multipath: including module with no multipath devices and empty" \

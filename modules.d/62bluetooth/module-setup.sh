@@ -5,7 +5,7 @@
 # Prerequisite check(s) for module.
 check() {
     # If the binary(s) requirements are not fulfilled the module can't be installed
-    require_any_binary /usr/lib/bluetooth/bluetoothd /usr/libexec/bluetooth/bluetoothd || return 1
+    require_any_binary -s /usr/lib/bluetooth/bluetoothd /usr/libexec/bluetooth/bluetoothd || return 1
 
     if [[ $hostonly ]]; then
         # Include by default if bluetooth kernel module is loaded

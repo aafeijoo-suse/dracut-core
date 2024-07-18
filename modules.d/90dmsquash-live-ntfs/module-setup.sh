@@ -1,7 +1,7 @@
 #!/bin/bash
 
 check() {
-    require_binaries ntfs-3g || return 1
+    require_binaries -s ntfs-3g || return 1
     return 255
 }
 

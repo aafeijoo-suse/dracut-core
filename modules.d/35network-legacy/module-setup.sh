@@ -2,10 +2,10 @@
 
 # called by dracut
 check() {
-    require_binaries ip sed awk grep pgrep tr expr || return 1
+    require_binaries -s ip sed awk grep pgrep tr expr || return 1
 
-    require_any_binary arping arping2 wicked || return 1
-    require_any_binary dhclient wicked || return 1
+    require_any_binary -s arping arping2 wicked || return 1
+    require_any_binary -s dhclient wicked || return 1
 
     return 255
 }

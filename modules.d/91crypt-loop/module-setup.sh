@@ -2,7 +2,7 @@
 
 # called by dracut
 check() {
-    require_binaries losetup || return 1
+    require_binaries -s losetup || return 1
 
     return 255
 }

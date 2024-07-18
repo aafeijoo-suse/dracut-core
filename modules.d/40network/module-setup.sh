@@ -17,7 +17,7 @@ depends() {
     done
 
     if [ -z "$network_handler" ]; then
-        if check_module "network-manager"; then
+        if check_module "network-manager" 1; then
             network_handler="network-manager"
         else
             network_handler="network-legacy"
