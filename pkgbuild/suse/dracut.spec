@@ -344,7 +344,6 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{dracutlibdir}/modules.d/03modsign
 %{dracutlibdir}/modules.d/03rescue
 %{dracutlibdir}/modules.d/04watchdog
-%{dracutlibdir}/modules.d/04watchdog-modules
 %{dracutlibdir}/modules.d/06dbus-broker
 %{dracutlibdir}/modules.d/06dbus-daemon
 %{dracutlibdir}/modules.d/06rngd
