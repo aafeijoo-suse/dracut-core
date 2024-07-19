@@ -19,12 +19,6 @@
 #
 export LC_MESSAGES=C
 
-# is_func <command>
-# Check whether $1 is a function.
-is_func() {
-    [[ "$(type -t "$1")" == "function" ]]
-}
-
 # Generic substring function.  If $2 is in $1, return 0.
 strstr() { [[ $1 == *"$2"* ]]; }
 # Generic glob matching function. If glob pattern $2 matches anywhere in $1, OK
@@ -89,127 +83,6 @@ find_binary() {
 
 ldconfig_paths() {
     $DRACUT_LDCONFIG ${dracutsysrootdir:+-r ${dracutsysrootdir} -f /etc/ld.so.conf} -pN 2> /dev/null | grep -E -v '/(lib|lib64|usr/lib|usr/lib64)/[^/]*$' | sed -n 's,.* => \(.*\)/.*,\1,p' | sort | uniq
-}
-
-# Version comparision function.  Assumes Linux style version scheme.
-# $1 = version a
-# $2 = comparision op (gt, ge, eq, le, lt, ne)
-# $3 = version b
-vercmp() {
-    local _n1
-    read -r -a _n1 <<< "${1//./ }"
-    local _op=$2
-    local _n2
-    read -r -a _n2 <<< "${3//./ }"
-    local _i _res
-
-    for ((_i = 0; ; _i++)); do
-        if [[ ! ${_n1[_i]}${_n2[_i]} ]]; then
-            _res=0
-        elif ((${_n1[_i]:-0} > ${_n2[_i]:-0})); then
-            _res=1
-        elif ((${_n1[_i]:-0} < ${_n2[_i]:-0})); then
-            _res=2
-        else
-            continue
-        fi
-        break
-    done
-
-    case $_op in
-        gt) ((_res == 1)) ;;
-        ge) ((_res != 2)) ;;
-        eq) ((_res == 0)) ;;
-        le) ((_res != 1)) ;;
-        lt) ((_res == 2)) ;;
-        ne) ((_res != 0)) ;;
-    esac
-}
-
-# Create all subdirectories for given path without creating the last element.
-# $1 = path
-mksubdirs() {
-    # shellcheck disable=SC2174
-    [[ -e ${1%/*} ]] || mkdir -m 0755 -p -- "${1%/*}"
-}
-
-# Function prints global variables in format name=value line by line.
-# $@ = list of global variables' name
-print_vars() {
-    local _var _value
-
-    for _var in "$@"; do
-        eval printf -v _value "%s" \""\$$_var"\"
-        [[ ${_value} ]] && printf '%s="%s"\n' "$_var" "$_value"
-    done
-}
-
-# normalize_path <path>
-# Prints the normalized path, where it removes any duplicated
-# and trailing slashes.
-# Example:
-# $ normalize_path ///test/test//
-# /test/test
-normalize_path() {
-    # shellcheck disable=SC2064
-    trap "$(shopt -p extglob)" RETURN
-    shopt -q -s extglob
-    local p=${1//+(\/)//}
-    printf "%s\n" "${p%/}"
-}
-
-# convert_abs_rel <from> <to>
-# Prints the relative path, when creating a symlink to <to> from <from>.
-# Example:
-# $ convert_abs_rel /usr/bin/test /bin/test-2
-# ../../bin/test-2
-# $ ln -s $(convert_abs_rel /usr/bin/test /bin/test-2) /usr/bin/test
-convert_abs_rel() {
-    local __current __absolute __abssize __cursize __newpath
-    local -i __i __level
-
-    set -- "$(normalize_path "$1")" "$(normalize_path "$2")"
-
-    # corner case #1 - self looping link
-    [[ $1 == "$2" ]] && {
-        printf "%s\n" "${1##*/}"
-        return
-    }
-
-    # corner case #2 - own dir link
-    [[ ${1%/*} == "$2" ]] && {
-        printf ".\n"
-        return
-    }
-
-    IFS=/ read -r -a __current <<< "$1"
-    IFS=/ read -r -a __absolute <<< "$2"
-
-    __abssize=${#__absolute[@]}
-    __cursize=${#__current[@]}
-
-    while [[ ${__absolute[__level]} == "${__current[__level]}" ]]; do
-        ((__level++))
-        if ((__level > __abssize || __level > __cursize)); then
-            break
-        fi
-    done
-
-    for ((__i = __level; __i < __cursize - 1; __i++)); do
-        if ((__i > __level)); then
-            __newpath=$__newpath"/"
-        fi
-        __newpath=$__newpath".."
-    done
-
-    for ((__i = __level; __i < __abssize; __i++)); do
-        if [[ -n $__newpath ]]; then
-            __newpath=$__newpath"/"
-        fi
-        __newpath=$__newpath${__absolute[__i]}
-    done
-
-    printf -- "%s\n" "$__newpath"
 }
 
 # get_fs_env <device>
@@ -558,10 +431,6 @@ for_each_host_dev_fs() {
         $_func "$_dev" "${host_fs_types[$_dev]}" && _ret=0
     done
     return $_ret
-}
-
-host_fs_all() {
-    printf "%s\n" "${host_fs_types[@]}"
 }
 
 # Walk all the slave relationships for a given block device.

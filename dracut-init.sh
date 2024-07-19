@@ -64,8 +64,7 @@ srcmods="$dracutsysrootdir/lib/modules/$kernel/"
 
 # shellcheck disable=SC2154
 [[ $drivers_dir ]] && {
-    if ! command -v kmod &> /dev/null && vercmp "$(modprobe --version | cut -d' ' -f3)" lt 3.7; then
-        dfatal 'To use --kmoddir option module-init-tools >= 3.7 is required.'
+    if ! command -v kmod &> /dev/null; then
         exit 1
     fi
     srcmods="$drivers_dir"
@@ -227,10 +226,6 @@ dracut_need_initqueue() {
 dracut_module_included() {
     # shellcheck disable=SC2154
     [[ " $mods_to_load $modules_loaded " == *\ $*\ * ]]
-}
-
-dracut_no_switch_root() {
-    : > "$initdir/lib/dracut/no-switch-root"
 }
 
 dracut_module_path() {
@@ -420,17 +415,6 @@ inst_script() {
     fi
 }
 
-inst_fsck_help() {
-    local _ret _helper="/run/dracut/fsck/fsck_help_$1.txt"
-    if $DRACUT_INSTALL ${dracutsysrootdir:+-r "$dracutsysrootdir"} ${initdir:+-D "$initdir"} ${loginstall:+-L "$loginstall"} ${DRACUT_RESOLVE_DEPS:+-l} ${DRACUT_FIPS_MODE:+-f} "$2" "$_helper"; then
-        return 0
-    else
-        _ret=$?
-        derror "$DRACUT_INSTALL" ${dracutsysrootdir:+-r "$dracutsysrootdir"} ${initdir:+-D "$initdir"} ${loginstall:+-L "$loginstall"} ${DRACUT_RESOLVE_DEPS:+-l} ${DRACUT_FIPS_MODE:+-f} "$2" "$_helper"
-        return $_ret
-    fi
-}
-
 # Use with form hostonly="$(optional_hostonly)" inst_xxxx <args>
 # If hostonly mode is set to "strict", hostonly restrictions will still
 # be applied, else will ignore hostonly mode and try to install all
@@ -448,37 +432,6 @@ mark_hostonly() {
     for i in "$@"; do
         echo "$i" >> "$initdir/lib/dracut/hostonly-files"
     done
-}
-
-# find symlinks linked to given library file
-# $1 = library file
-# Function searches for symlinks by stripping version numbers appended to
-# library filename, checks if it points to the same target and finally
-# prints the list of symlinks to stdout.
-#
-# Example:
-# rev_lib_symlinks libfoo.so.8.1
-# output: libfoo.so.8 libfoo.so
-# (Only if libfoo.so.8 and libfoo.so exists on host system.)
-rev_lib_symlinks() {
-    local _fn
-    local _orig
-    local _links
-
-    [[ ! $1 ]] && return 0
-
-    _fn="$1"
-    _orig="$(readlink -f "$1")"
-    _links=()
-
-    [[ ${_fn} == *.so.* ]] || return 1
-
-    until [[ ${_fn##*.} == so ]]; do
-        _fn="${_fn%.*}"
-        [[ -L ${_fn} ]] && [[ $(readlink -f "${_fn}") == "${_orig}" ]] && _links+=("${_fn}")
-    done
-
-    echo "${_links[*]}}"
 }
 
 # attempt to install any programs specified in a udev rule
@@ -590,32 +543,6 @@ inst_rules() {
     done
 }
 
-inst_rules_wildcard() {
-    local _target=/etc/udev/rules.d _rule _found
-
-    inst_dir "${udevdir}/rules.d"
-    inst_dir "$_target"
-    for _rule in ${udevdir}/rules.d/$1 ${dracutbasedir}/rules.d/$1; do
-        [[ -e $_rule ]] || continue
-        inst_rule_programs "$_rule"
-        inst_rule_group_owner "$_rule"
-        inst_rule_initqueue "$_rule"
-        inst_simple "$_rule"
-        _found=$_rule
-    done
-    if [[ -n ${hostonly} ]]; then
-        for _rule in ${_target}/$1; do
-            [[ -f $_rule ]] || continue
-            inst_rule_programs "$_rule"
-            inst_rule_group_owner "$_rule"
-            inst_rule_initqueue "$_rule"
-            inst_simple "$_rule"
-            _found=$_rule
-        done
-    fi
-    [[ $_found ]] || ddebug "Skipping udev rule: $_rule"
-}
-
 # make sure that library links are correct and up to date
 build_ld_cache() {
     for f in "$dracutsysrootdir"/etc/ld.so.conf "$dracutsysrootdir"/etc/ld.so.conf.d/*; do
@@ -659,33 +586,6 @@ inst_hook() {
     hook="/var/lib/dracut/hooks/${1}/${2}-${3##*/}"
     inst_simple "$3" "$hook"
     chmod u+x "$initdir/$hook"
-}
-
-# install any of listed files
-#
-# If first argument is '-d' and second some destination path, first accessible
-# source is installed into this path, otherwise it will installed in the same
-# path as source.  If none of listed files was installed, function return 1.
-# On first successful installation it returns with 0 status.
-#
-# Example:
-#
-# inst_any -d /bin/foo /bin/bar /bin/baz
-#
-# Lets assume that /bin/baz exists, so it will be installed as /bin/foo in
-# initramfs.
-inst_any() {
-    local to f
-
-    [[ $1 == '-d' ]] && to="$2" && shift 2
-
-    for f in "$@"; do
-        [[ -e $f ]] || continue
-        [[ $to ]] && inst "$f" "$to" && return 0
-        inst "$f" && return 0
-    done
-
-    return 1
 }
 
 # inst_libdir_dir <dir> [<dir>...]
@@ -1092,7 +992,6 @@ dracut_kernel_post() {
         dfatal "\"depmod -a $kernel\" failed."
         exit 1
     fi
-
 }
 
 instmods() {
