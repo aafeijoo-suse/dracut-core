@@ -19,7 +19,7 @@
 #
 export LC_MESSAGES=C
 
-if [[ $EUID == "0" ]] && ! [[ $DRACUT_NO_XATTR ]]; then
+if ! [[ $DRACUT_NO_XATTR ]]; then
     export DRACUT_CP="cp --reflink=auto --sparse=auto --preserve=mode,timestamps,xattr,links -dfr"
 else
     export DRACUT_CP="cp --reflink=auto --sparse=auto --preserve=mode,timestamps,links -dfr"
@@ -622,11 +622,7 @@ build_ld_cache() {
         [[ -f $f ]] && inst_simple "${f#"$dracutsysrootdir"}"
     done
     if ! $DRACUT_LDCONFIG -r "$initdir" -f /etc/ld.so.conf; then
-        if [[ $EUID == 0 ]]; then
-            derror "ldconfig exited ungracefully"
-        else
-            derror "ldconfig might need uid=0 (root) for chroot()"
-        fi
+        derror "ldconfig exited ungracefully"
     fi
 }
 

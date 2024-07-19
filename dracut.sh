@@ -30,7 +30,12 @@ if ((BASH_VERSINFO[0] < 4)); then
 fi
 
 if [[ -n $POSIXLY_CORRECT ]]; then
-    printf "%s\n" "dracut[F]: dracut is not compatible with Bash in POSIX mode" >&2
+    printf "%s\n" "dracut[F]: dracut is not compatible with Bash in POSIX mode." >&2
+    exit 1
+fi
+
+if [[ $EUID != "0" ]]; then
+    printf "%s\n" "dracut[F]: dracut must be run as root." >&2
     exit 1
 fi
 
@@ -1750,7 +1755,7 @@ if [[ $kernel_only != yes ]]; then
         # shellcheck disable=SC2174
         mkdir -m 0755 -p "${initdir}/lib/dracut/hooks/$_d"
     done
-    if [[ $EUID == "0" ]] && ! [[ $DRACUT_NO_MKNOD ]]; then
+    if ! [[ $DRACUT_NO_MKNOD ]]; then
         [[ -c ${initdir}/dev/null ]] || mknod "${initdir}"/dev/null c 1 3
         [[ -c ${initdir}/dev/kmsg ]] || mknod "${initdir}"/dev/kmsg c 1 11
         [[ -c ${initdir}/dev/console ]] || mknod "${initdir}"/dev/console c 5 1
@@ -2184,8 +2189,6 @@ if [[ $DRACUT_REPRODUCIBLE ]]; then
     fi
 fi
 
-[[ $EUID != 0 ]] && cpio_owner="0:0"
-
 if [[ $create_early_cpio == yes ]]; then
     echo 1 > "$early_cpio_dir/d/early_cpio"
 
@@ -2199,8 +2202,7 @@ if [[ $create_early_cpio == yes ]]; then
         umask 077
         cd "$early_cpio_dir/d"
         find . -print0 | sort -z \
-            | cpio ${CPIO_REPRODUCIBLE:+--reproducible} --null \
-                ${cpio_owner:+-R "$cpio_owner"} -H newc -o --quiet > "${DRACUT_TMPDIR}/initramfs.img"
+            | cpio ${CPIO_REPRODUCIBLE:+--reproducible} --null -H newc -o --quiet > "${DRACUT_TMPDIR}/initramfs.img"
     ); then
         dfatal "Creation of $outfile failed"
         exit 1
@@ -2279,7 +2281,7 @@ if ! (
     umask 077
     cd "$initdir"
     find . -print0 | sort -z \
-        | cpio ${CPIO_REPRODUCIBLE:+--reproducible} --null ${cpio_owner:+-R "$cpio_owner"} -H newc -o --quiet \
+        | cpio ${CPIO_REPRODUCIBLE:+--reproducible} --null -H newc -o --quiet \
         | $compress >> "${DRACUT_TMPDIR}/initramfs.img"
 ); then
     dfatal "Creation of $outfile failed"
