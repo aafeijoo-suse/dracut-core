@@ -47,7 +47,7 @@ man8pages = man/dracut.8 \
 
 manpages = $(man1pages) $(man5pages) $(man7pages) $(man8pages)
 
-.PHONY: install clean archive tall check AUTHORS CONTRIBUTORS doc dracut-version.sh
+.PHONY: install clean archive tall check doc dracut-version.sh
 
 all: dracut-version.sh dracut.pc dracut-install src/skipcpio/skipcpio dracut-util
 
@@ -253,9 +253,3 @@ endif
 
 check: all syncheck
 	@[ "$$EUID" == "0" ] || { echo "'check' must be run as root! Please use 'sudo'."; exit 1; }
-
-AUTHORS:
-	git shortlog  --numbered --summary -e |while read a rest || [ -n "$$rest" ]; do echo $$rest;done > AUTHORS
-
-CONTRIBUTORS:
-	@git shortlog $(DRACUT_MAIN_VERSION).. --numbered --summary -e |while read a rest || [ -n "$$rest" ]; do echo "- $$rest";done
