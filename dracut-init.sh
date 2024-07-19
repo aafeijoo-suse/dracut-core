@@ -1205,18 +1205,9 @@ instmods() {
     return $_ret
 }
 
-if [[ "$(ln --help)" == *--relative* ]]; then
-    ln_r() {
-        ln -sfnr "${initdir}/$1" "${initdir}/$2"
-    }
-else
-    ln_r() {
-        local _source=$1
-        local _dest=$2
-        [[ -d ${_dest%/*} ]] && _dest=$(readlink -f "${_dest%/*}")/${_dest##*/}
-        ln -sfn -- "$(convert_abs_rel "${_dest}" "${_source}")" "${initdir}/${_dest}"
-    }
-fi
+ln_r() {
+    ln -sfnr "${initdir}/$1" "${initdir}/$2"
+}
 
 is_qemu_virtualized() {
     # 0 if a virt environment was detected
