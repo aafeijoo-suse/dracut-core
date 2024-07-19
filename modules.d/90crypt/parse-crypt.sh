@@ -149,7 +149,7 @@ else
             printf -- '--unique --settled --onetime --name crypt-run-generator-%%k '
             # shellcheck disable=SC2016
             printf -- '%s $env{DEVNAME} luks-$env{ID_FS_UUID}"\n' "$(command -v crypt-run-generator)"
-        } >> /etc/udev/rules.d/70-luks.rules.new7
+        } >> /etc/udev/rules.d/70-luks.rules.new
     fi
 
     echo 'LABEL="luks_end"' >> /etc/udev/rules.d/70-luks.rules.new
