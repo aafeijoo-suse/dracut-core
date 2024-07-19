@@ -17,6 +17,12 @@ check() {
 }
 
 # called by dracut
+depends() {
+    echo systemd-udevd
+    return 0
+}
+
+# called by dracut
 cmdline() {
     # Hack for slow machines
     # see https://github.com/dracutdevs/dracut/issues/658
@@ -31,20 +37,7 @@ installkernel() {
 
 # called by dracut
 install() {
-    if ! inst_rules 64-btrfs.rules; then
-        inst_rules "$moddir/80-btrfs.rules"
-        case "$(btrfs --help)" in
-            *device\ ready*)
-                inst_script "$moddir/btrfs_device_ready.sh" /sbin/btrfs_finished
-                ;;
-            *)
-                inst_script "$moddir/btrfs_finished.sh" /sbin/btrfs_finished
-                ;;
-        esac
-    else
-        inst_rules 64-btrfs-dm.rules
-    fi
-
-    inst_multiple -o btrfsck btrfs-zero-log
+    inst_rules 64-btrfs-dm.rules
+    inst_multiple -o btrfsck
     inst "$(command -v btrfs)" /sbin/btrfs
 }
