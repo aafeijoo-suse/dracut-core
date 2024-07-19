@@ -18,8 +18,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# store for logging
-
 unset BASH_ENV
 unset GZIP
 
@@ -1492,7 +1490,7 @@ done
 
 for f in $add_fstab; do
     [[ -e $f ]] || continue
-    while read -r dev rest || [ -n "$dev" ]; do
+    while read -r dev _ || [ -n "$dev" ]; do
         push_host_devs "$dev"
     done < "$f"
 done
@@ -1548,7 +1546,7 @@ if [[ $hostonly ]] && [[ $hostonly_default_device != "no" ]]; then
 
     # TODO - with sysroot, /proc/swaps is not relevant
     if [[ -f /proc/swaps ]] && [[ -f $dracutsysrootdir/etc/fstab ]]; then
-        while read -r dev type rest || [ -n "$dev" ]; do
+        while read -r dev type _ || [ -n "$dev" ]; do
             [[ -b $dev ]] || continue
             [[ $type == "partition" ]] || continue
 
@@ -1604,9 +1602,6 @@ if [[ $hostonly ]] && [[ $hostonly_default_device != "no" ]]; then
         done < "$dracutsysrootdir"/etc/fstab
     fi
 fi
-
-unset m
-unset rest
 
 _get_fs_type() {
     [[ $1 ]] || return
