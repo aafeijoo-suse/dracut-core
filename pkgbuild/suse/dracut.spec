@@ -17,12 +17,6 @@
 
 %define dracutlibdir %{_prefix}/lib/dracut
 
-%if 0%{?suse_version} >= 1550
-%define dracut_sbindir %{_sbindir}
-%else
-%define dracut_sbindir /sbin
-%endif
-
 Name:           dracut
 Version:        061
 Release:        0
