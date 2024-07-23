@@ -37,10 +37,9 @@ BuildRequires:  bash
 BuildRequires:  docbook-xsl-stylesheets
 BuildRequires:  libxslt
 BuildRequires:  pkgconfig(libkmod)
-BuildRequires:  pkgconfig(systemd) >= 219
-Requires:       gawk
+BuildRequires:  pkgconfig(systemd) >= 249
 Requires:       %{_bindir}/get_kernel_version
-Requires:       bash
+Requires:       bash >= 4
 Requires:       coreutils
 Requires(post): coreutils
 Requires:       cpio
@@ -48,14 +47,16 @@ Requires:       elfutils
 Requires:       file
 Requires:       filesystem
 Requires:       findutils
+Requires:       gawk
 Requires:       grep
 Requires:       hardlink
 Requires:       modutils
-Requires:       pigz
+Requires:       procps
+Recommends:     pigz
 Requires:       sed
-Requires:       systemd >= 219
+Requires:       systemd >= 249
 Recommends:     (tpm2.0-tools if tpm2-0-tss)
-Requires:       udev > 166
+Requires:       udev > 249
 Requires:       util-linux >= 2.21
 Requires:       util-linux-systemd >= 2.36.2
 Recommends:     xz
@@ -112,6 +113,23 @@ Requires:       (jq if nvme-cli)
 %description network
 This package requires everything which is needed to build an initramfs with
 dracut with network support.
+
+%package live
+Summary:        dracut modules to build a dracut initramfs with live image capabilities
+Group:          System/Base
+Requires:       %{name} = %{version}-%{release}
+Requires:       %{name}-network = %{version}-%{release}
+Requires:       curl
+Requires:       device-mapper
+Requires:       fuse
+Requires:       gzip
+Requires:       ntfs-3g
+Requires:       parted
+Requires:       tar
+
+%description live
+This package requires everything which is needed to build an initramfs with
+dracut with live image capabilities.
 
 %prep
 %autosetup
@@ -252,7 +270,6 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{dracutlibdir}/modules.d/40network
 %{dracutlibdir}/modules.d/45url-lib
 %{dracutlibdir}/modules.d/90kernel-network-modules
-%{dracutlibdir}/modules.d/90livenet
 %{dracutlibdir}/modules.d/90qemu-net
 %{dracutlibdir}/modules.d/95cifs
 %{dracutlibdir}/modules.d/95fcoe
@@ -262,6 +279,14 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{dracutlibdir}/modules.d/95nfs
 %{dracutlibdir}/modules.d/95nvmf
 %{dracutlibdir}/modules.d/95ssh-client
+
+%files live
+%{dracutlibdir}/modules.d/90dmsquash-live
+%{dracutlibdir}/modules.d/90dmsquash-live-autooverlay
+%{dracutlibdir}/modules.d/90dmsquash-live-ntfs
+%{dracutlibdir}/modules.d/90livenet
+%{dracutlibdir}/modules.d/90overlayfs
+%{dracutlibdir}/modules.d/99img-lib
 
 %files
 %license COPYING
@@ -362,16 +387,12 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{dracutlibdir}/modules.d/90crypt
 %{dracutlibdir}/modules.d/90dm
 %{dracutlibdir}/modules.d/90dmraid
-%{dracutlibdir}/modules.d/90dmsquash-live
-%{dracutlibdir}/modules.d/90dmsquash-live-autooverlay
-%{dracutlibdir}/modules.d/90dmsquash-live-ntfs
 %{dracutlibdir}/modules.d/90kernel-modules-extra
 %{dracutlibdir}/modules.d/90kernel-modules
 %{dracutlibdir}/modules.d/90lvm
 %{dracutlibdir}/modules.d/90mdraid
 %{dracutlibdir}/modules.d/90multipath
 %{dracutlibdir}/modules.d/90nvdimm
-%{dracutlibdir}/modules.d/90overlayfs
 %{dracutlibdir}/modules.d/90qemu
 %{dracutlibdir}/modules.d/91crypt-gpg
 %{dracutlibdir}/modules.d/91crypt-loop
@@ -405,7 +426,6 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{dracutlibdir}/modules.d/98selinux
 %{dracutlibdir}/modules.d/99base
 %{dracutlibdir}/modules.d/99fs-lib
-%{dracutlibdir}/modules.d/99img-lib
 %{dracutlibdir}/modules.d/99memstrack
 %{dracutlibdir}/modules.d/99shutdown
 %{dracutlibdir}/modules.d/99squash
