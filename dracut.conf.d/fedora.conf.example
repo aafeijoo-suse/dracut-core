@@ -1,0 +1,11 @@
+# Fedora specific dracut settings
+
+hostonly="yes"
+hostonly_cmdline="no"
+i18n_vars="/etc/sysconfig/keyboard:KEYTABLE-KEYMAP /etc/sysconfig/i18n:SYSFONT-FONT,FONTACM-FONT_MAP,FONT_UNIMAP"
+i18n_default_font="eurlatgr"
+i18n_install_all="yes"
+install_optional_items+=" vi /usr/libexec/vi /etc/virc ps grep cat rm "
+reproducible="yes"
+stdloglvl=3
+sysloglvl=5
