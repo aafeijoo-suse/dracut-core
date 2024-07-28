@@ -1,8 +1,9 @@
-dracut-mini
+dracutla
 ====
 
-Like [dracut](https://github.com/dracutdevs/dracut), but minimal and only for
-systemd systems.
+Like the vampire, but instead of blood, it feeds on
+[dracut](https://github.com/dracutdevs/dracut) code (it especially finds
+non-systemd code appetizing).
 
 OBS devel repo for openSUSE Tumbleweed:
 
