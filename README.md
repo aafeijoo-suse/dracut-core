@@ -13,9 +13,9 @@ $ zypper ref dracutla
 $ zypper in --from dracutla dracut
 ```
 
-- for Slowroll: `s/Tumbleweed/Slowroll`
-- for Leap 15.6: `s/openSUSE_Tumbleweed/15.6`
-- for Leap 15.5: `s/openSUSE_Tumbleweed/15.5`
+- for Slowroll: `s/Tumbleweed/Slowroll/`
+- for Leap 15.6: `s/openSUSE_Tumbleweed/15.6/`
+- for Leap 15.5: `s/openSUSE_Tumbleweed/15.5/`
 
 OBS devel repo for Fedora Rawhide:
 
