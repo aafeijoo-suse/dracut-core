@@ -8,10 +8,14 @@ non-systemd code appetizing).
 OBS devel repo for openSUSE Tumbleweed:
 
 ```
-$ zypper ar https://download.opensuse.org/repositories/home:/afeijoo:/devel/openSUSE_Tumbleweed/?ssl_verify=no dracut-mini
-$ zypper ref dracut-mini
-$ zypper in --from dracut-mini dracut
+$ zypper ar https://download.opensuse.org/repositories/home:/afeijoo:/devel/openSUSE_Tumbleweed/?ssl_verify=no dracutla
+$ zypper ref dracutla
+$ zypper in --from dracutla dracut
 ```
+
+- for Slowroll: `s/Tumbleweed/Slowroll`
+- for Leap 15.6: `s/openSUSE_Tumbleweed/15.6`
+- for Leap 15.5: `s/openSUSE_Tumbleweed/15.5`
 
 OBS devel repo for Fedora Rawhide:
 
@@ -20,6 +24,6 @@ $ dnf config-manager --add-repo https://download.opensuse.org/repositories/home:
 $ dnf install dracut --repo home_afeijoo_devel_fedora --best --allowerasing
 ```
 
-(for Fedora 40: s/Fedora_Rawhide/Fedora_40/)
+- for Fedora 40: `s/Fedora_Rawhide/Fedora_40/`
 
 Licensed under the GPLv2
