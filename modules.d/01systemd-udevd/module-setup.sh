@@ -30,6 +30,7 @@ install() {
     inst_multiple -o \
         "$udevdir"/hwdb.bin \
         "$udevdir"/udev.conf \
+        "$udevdir/udev.conf.d/*.conf" \
         "$udevdir"/ata_id \
         "$udevdir"/cdrom_id \
         "$udevdir"/dmi_memory_id \
@@ -106,6 +107,7 @@ install() {
         inst_multiple -H -o \
             "$udevconfdir"/hwdb.bin \
             "$udevconfdir"/udev.conf \
+            "$udevconfdir/udev.conf.d/*.conf" \
             "$udevrulesconfdir/*.rules" \
             "$systemdutilconfdir"/hwdb/hwdb.bin \
             "$systemdsystemconfdir"/systemd-udevd.service \
