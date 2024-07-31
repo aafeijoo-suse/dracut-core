@@ -34,7 +34,6 @@ else
     PARTUUID=$(getargs rd.luks.partuuid)
     SERIAL=$(getargs rd.luks.serial)
     LUKS=$(getargs rd.luks.uuid)
-    tout=$(getarg rd.luks.key.tout)
 
     if [ -e /etc/crypttab ]; then
         while read -r _ _dev _ || [ -n "$_dev" ]; do
