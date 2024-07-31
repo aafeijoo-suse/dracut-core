@@ -19,7 +19,7 @@ check() {
 # called by dracut
 depends() {
     local deps
-    deps="dm rootfs-block"
+    deps="dm rootfs-block systemd"
     if [[ $hostonly && -f "$dracutsysrootdir"/etc/crypttab ]]; then
         if grep -q -e "fido2-device=" -e "fido2-cid=" "$dracutsysrootdir"/etc/crypttab; then
             deps+=" fido2"
@@ -29,16 +29,6 @@ depends() {
         fi
         if grep -q "tpm2-device=" "$dracutsysrootdir"/etc/crypttab; then
             deps+=" tpm2-tss"
-        fi
-        # A password cannot be entered if there is no graphical output during boot,
-        # as is the case in aarch64, where efifb does not work with qemu-system-aarch64:
-        # - virtio-gpu-pci does not expose a linear framebuffer
-        # - virtio-vga is not supported
-        # - ramfb is not enough
-        # Therefore, depend on the drm module if virtio_gpu is loaded on the system.
-        if [[ ${DRACUT_ARCH:-$(uname -m)} == arm* || ${DRACUT_ARCH:-$(uname -m)} == aarch64 ]] \
-            && grep -r -q "virtio:d00000010v" /sys/bus/virtio/devices/*/modalias 2> /dev/null; then
-            deps+=" drm"
         fi
     fi
     echo "$deps"
@@ -169,13 +159,8 @@ install() {
         "$tmpfilesdir"/cryptsetup.conf \
         "$systemdutildir"/system-generators/systemd-cryptsetup-generator \
         "$systemdutildir"/systemd-cryptsetup \
-        "$systemdsystemunitdir"/systemd-ask-password-console.path \
-        "$systemdsystemunitdir"/systemd-ask-password-console.service \
-        "$systemdsystemunitdir"/cryptsetup.target \
         "$systemdsystemunitdir"/sysinit.target.wants/cryptsetup.target \
-        "$systemdsystemunitdir"/remote-cryptsetup.target \
-        "$systemdsystemunitdir"/initrd-root-device.target.wants/remote-cryptsetup.target \
-        systemd-ask-password systemd-tty-ask-password-agent
+        "$systemdsystemunitdir"/initrd-root-device.target.wants/remote-cryptsetup.target
 
     # Install required libraries.
     _arch=${DRACUT_ARCH:-$(uname -m)}
