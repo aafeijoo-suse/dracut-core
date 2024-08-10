@@ -30,7 +30,7 @@ install() {
         inst_multiple gpg-agent
         inst_multiple gpg-connect-agent
         inst_multiple -o /usr/libexec/scdaemon /usr/lib/gnupg/scdaemon
-        cp "$dracutsysrootdir$(sc_public_key)" "${initdir}/root/"
+        cp "$(sc_public_key)" "${initdir}/root/"
     fi
 }
 
@@ -46,9 +46,9 @@ sc_supported() {
     gpgMajor="$(gpg --version | sed -n 1p | sed -n -r -e 's|.* ([0-9]*).*|\1|p')"
     gpgMinor="$(gpg --version | sed -n 1p | sed -n -r -e 's|.* [0-9]*\.([0-9]*).*|\1|p')"
 
-    if [[ -x "$dracutsysrootdir"/usr/libexec/scdaemon ]]; then
+    if [[ -x /usr/libexec/scdaemon ]]; then
         scdaemon=/usr/libexec/scdaemon
-    elif [[ -x "$dracutsysrootdir"/usr/lib/gnupg/scdaemon ]]; then
+    elif [[ -x /usr/lib/gnupg/scdaemon ]]; then
         scdaemon=/usr/lib/gnupg/scdaemon
     else
         return 1
@@ -57,7 +57,7 @@ sc_supported() {
     if [[ ${gpgMajor} -gt 2 || ${gpgMajor} -eq 2 && ${gpgMinor} -ge 1 ]] \
         && require_binaries gpg-agent \
         && require_binaries gpg-connect-agent \
-        && ($DRACUT_LDD "${dracutsysrootdir}${scdaemon}" | grep libusb > /dev/null); then
+        && ($DRACUT_LDD "${scdaemon}" | grep libusb > /dev/null); then
         return 0
     else
         return 1
@@ -65,7 +65,7 @@ sc_supported() {
 }
 
 sc_requested() {
-    if [ -f "$dracutsysrootdir$(sc_public_key)" ]; then
+    if [ -f "$(sc_public_key)" ]; then
         return 0
     else
         return 1

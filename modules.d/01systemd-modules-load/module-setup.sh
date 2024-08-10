@@ -27,7 +27,7 @@ installkernel() {
 
     modules_load_get() {
         local _line _i
-        for _i in "$dracutsysrootdir$1"/*.conf; do
+        for _i in "$1"/*.conf; do
             [[ -f $_i ]] || continue
             while read -r _line || [ -n "$_line" ]; do
                 case $_line in

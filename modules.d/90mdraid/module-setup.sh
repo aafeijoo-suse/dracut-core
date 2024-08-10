@@ -93,16 +93,16 @@ install() {
     prepare_udev_rules 59-persistent-storage-md.rules
 
     if [[ $hostonly ]] || [[ $mdadmconf == "yes" ]]; then
-        if [[ -f $dracutsysrootdir/etc/mdadm.conf ]]; then
+        if [[ -f /etc/mdadm.conf ]]; then
             inst -H /etc/mdadm.conf
         else
-            [[ -f $dracutsysrootdir/etc/mdadm/mdadm.conf ]] && inst -H /etc/mdadm/mdadm.conf /etc/mdadm.conf
+            [[ -f /etc/mdadm/mdadm.conf ]] && inst -H /etc/mdadm/mdadm.conf /etc/mdadm.conf
         fi
-        if [[ -d $dracutsysrootdir/etc/mdadm.conf.d ]]; then
+        if [[ -d /etc/mdadm.conf.d ]]; then
             local f
             inst_dir /etc/mdadm.conf.d
             for f in /etc/mdadm.conf.d/*.conf; do
-                [[ -f "$dracutsysrootdir$f" ]] || continue
+                [[ -f "$f" ]] || continue
                 inst -H "$f"
             done
         fi
@@ -115,16 +115,16 @@ install() {
     inst_hook shutdown 30 "$moddir/md-shutdown.sh"
     inst_script "$moddir/mdraid-cleanup.sh" /sbin/mdraid-cleanup
     inst_script "$moddir/mdraid_start.sh" /sbin/mdraid_start
-    if [[ -e $dracutsysrootdir$systemdsystemunitdir/mdmon@.service ]]; then
+    if [[ -e $systemdsystemunitdir/mdmon@.service ]]; then
         inst_simple "$systemdsystemunitdir"/mdmon@.service
     fi
-    if [[ -e $dracutsysrootdir$systemdsystemunitdir/mdadm-last-resort@.service ]]; then
+    if [[ -e $systemdsystemunitdir/mdadm-last-resort@.service ]]; then
         inst_simple "$systemdsystemunitdir"/mdadm-last-resort@.service
     fi
-    if [[ -e $dracutsysrootdir$systemdsystemunitdir/mdadm-last-resort@.timer ]]; then
+    if [[ -e $systemdsystemunitdir/mdadm-last-resort@.timer ]]; then
         inst_simple "$systemdsystemunitdir"/mdadm-last-resort@.timer
     fi
-    if [[ -e $dracutsysrootdir$systemdsystemunitdir/mdadm-grow-continue@.service ]]; then
+    if [[ -e $systemdsystemunitdir/mdadm-grow-continue@.service ]]; then
         inst_simple "$systemdsystemunitdir"/mdadm-grow-continue@.service
     fi
     inst_hook pre-shutdown 30 "$moddir/mdmon-pre-shutdown.sh"

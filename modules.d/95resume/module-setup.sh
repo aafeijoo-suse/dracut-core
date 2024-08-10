@@ -25,9 +25,9 @@ check() {
                 return 255
             fi
             if [[ "$_resume" == /dev/mapper/* ]]; then
-                if [[ -f "$dracutsysrootdir"/etc/crypttab ]]; then
+                if [[ -f /etc/crypttab ]]; then
                     local _mapper _opts
-                    read -r _mapper _ _ _opts < <(grep -m1 -w "^${_resume#/dev/mapper/}" "$dracutsysrootdir"/etc/crypttab)
+                    read -r _mapper _ _ _opts < <(grep -m1 -w "^${_resume#/dev/mapper/}" /etc/crypttab)
                     if [[ -n "$_mapper" ]] && [[ "$_opts" == *swap* ]]; then
                         derror "Current resume kernel argument points to a volatile swap"
                         return 255

@@ -30,7 +30,7 @@ install() {
     prepare_udev_rules 59-persistent-storage.rules 61-persistent-storage.rules
 
     {
-        grep '^floppy:' "$dracutsysrootdir"/etc/group 2> /dev/null
+        grep '^floppy:' /etc/group 2> /dev/null
     } >> "$initdir/etc/group"
 
     inst_multiple -o \

@@ -16,7 +16,7 @@ install() {
     unset FONT
     unset KEYMAP
     # shellcheck disable=SC1090
-    [[ -f "$dracutsysrootdir"/etc/vconsole.conf ]] && . "$dracutsysrootdir"/etc/vconsole.conf
+    [[ -f /etc/vconsole.conf ]] && . /etc/vconsole.conf
 
     KBDSUBDIRS=(consolefonts consoletrans keymaps unimaps)
     DEFAULT_FONT="${i18n_default_font:-eurlatgr}"
@@ -37,7 +37,7 @@ install() {
             MAPNAME=${1%.map*}
 
             mapfile -t -d '' MAPS < <(
-                find "${dracutsysrootdir}${kbddir}"/keymaps/ -type f,l \( -name "${MAPNAME}" -o -name "${MAPNAME}.map*" \) -print0
+                find "${kbddir}"/keymaps/ -type f,l \( -name "${MAPNAME}" -o -name "${MAPNAME}.map*" \) -print0
             )
         fi
 
@@ -57,7 +57,7 @@ install() {
 
             for INCL in "${INCLUDES[@]}"; do
                 local -a FNS
-                mapfile -t -d '' FNS < <(find "${dracutsysrootdir}${kbddir}"/keymaps/ -type f -name "${INCL}*" -print0)
+                mapfile -t -d '' FNS < <(find "${kbddir}"/keymaps/ -type f -name "${INCL}*" -print0)
                 for FN in "${FNS[@]}"; do
                     [[ -f $FN ]] || continue
                     [[ -v KEYMAPS["$FN"] ]] || findkeymap "$FN"
@@ -102,8 +102,8 @@ install() {
             read -r -a item <<< "${item/:/ }"
             for map in ${item[1]//,/ }; do
                 read -r -a map <<< "${map//-/ }"
-                if [[ -f "$dracutsysrootdir${item[0]}" ]]; then
-                    value=$(grep "^${map[0]}=" "$dracutsysrootdir${item[0]}")
+                if [[ -f "${item[0]}" ]]; then
+                    value=$(grep "^${map[0]}=" "${item[0]}")
                     value=${value#*=}
                     echo "${map[1]:-${map[0]}}=${value}"
                 fi
@@ -128,7 +128,7 @@ install() {
 
         for _src in "${KBDSUBDIRS[@]}"; do
             inst_dir "${kbddir}/$_src"
-            $DRACUT_CP -L -t "${initdir}/${kbddir}/$_src" "${dracutsysrootdir}${kbddir}/$_src"/*
+            $DRACUT_CP -L -t "${initdir}/${kbddir}/$_src" "${kbddir}/$_src"/*
         done
 
         # remove unnecessary files
@@ -152,9 +152,9 @@ install() {
         # shellcheck disable=SC2086
         eval "$(gather_vars ${i18n_vars})"
         # shellcheck disable=SC1090
-        [ -f "$dracutsysrootdir"$I18N_CONF ] && . "$dracutsysrootdir"$I18N_CONF
+        [ -f $I18N_CONF ] && . $I18N_CONF
         # shellcheck disable=SC1090
-        [ -f "$dracutsysrootdir"$VCONFIG_CONF ] && . "$dracutsysrootdir"$VCONFIG_CONF
+        [ -f $VCONFIG_CONF ] && . $VCONFIG_CONF
 
         shopt -q -s nocasematch
         if [[ ${UNICODE} ]]; then
@@ -213,7 +213,7 @@ install() {
                 # create new symlink to decompressed keymap
                 maplink=${maplink%.gz}
                 keymap=${keymap%.gz}
-                ln -srn "${initdir}${maplink#"$dracutsysrootdir"}" "${initdir}${keymap#"$dracutsysrootdir"}"
+                ln -srn "${initdir}${maplink}" "${initdir}${keymap}"
             else
                 inst_opt_decompress "${keymap}"
             fi
@@ -244,7 +244,7 @@ install() {
             inst_simple "${kbddir}"/unimaps/"${FONT_UNIMAP}".uni
         fi
 
-        if [[ -f $dracutsysrootdir${I18N_CONF} ]]; then
+        if [[ -f ${I18N_CONF} ]]; then
             inst_simple ${I18N_CONF}
         fi
 
@@ -253,9 +253,9 @@ install() {
 
     checks() {
         for kbddir in ${kbddir} /usr/lib/kbd /lib/kbd /usr/share /usr/share/kbd; do
-            if [[ -d "$dracutsysrootdir${kbddir}" ]]; then
+            if [[ -d "${kbddir}" ]]; then
                 for dir in "${KBDSUBDIRS[@]}"; do
-                    [[ -d "$dracutsysrootdir${kbddir}/${dir}" ]] && continue
+                    [[ -d "${kbddir}/${dir}" ]] && continue
                     false
                 done && break
             fi
@@ -264,7 +264,7 @@ install() {
 
         [[ "$kbddir" ]] || return 1
 
-        [[ -f $dracutsysrootdir$I18N_CONF && -f $dracutsysrootdir$VCONFIG_CONF ]] \
+        [[ -f $I18N_CONF && -f $VCONFIG_CONF ]] \
             || [[ ! ${hostonly} || ${i18n_vars} ]] || {
             derror 'i18n_vars not set!  Please set up i18n_vars in ' \
                 'configuration file.'
@@ -275,7 +275,7 @@ install() {
     if checks; then
         install_base
 
-        if [[ -f $dracutsysrootdir${VCONFIG_CONF} ]]; then
+        if [[ -f ${VCONFIG_CONF} ]]; then
             inst_simple ${VCONFIG_CONF}
         fi
 

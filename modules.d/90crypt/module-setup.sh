@@ -20,14 +20,14 @@ check() {
 depends() {
     local deps
     deps="dm rootfs-block systemd"
-    if [[ $hostonly && -f "$dracutsysrootdir"/etc/crypttab ]]; then
-        if grep -q -e "fido2-device=" -e "fido2-cid=" "$dracutsysrootdir"/etc/crypttab; then
+    if [[ $hostonly && -f /etc/crypttab ]]; then
+        if grep -q -e "fido2-device=" -e "fido2-cid=" /etc/crypttab; then
             deps+=" fido2"
         fi
-        if grep -q "pkcs11-uri" "$dracutsysrootdir"/etc/crypttab; then
+        if grep -q "pkcs11-uri" /etc/crypttab; then
             deps+=" pkcs11"
         fi
-        if grep -q "tpm2-device=" "$dracutsysrootdir"/etc/crypttab; then
+        if grep -q "tpm2-device=" /etc/crypttab; then
             deps+=" tpm2-tss"
         fi
     fi
@@ -97,7 +97,7 @@ install() {
 
     inst_hook cmdline 30 "$moddir/parse-crypt.sh"
 
-    if [[ $hostonly ]] && [[ -f $dracutsysrootdir/etc/crypttab ]]; then
+    if [[ $hostonly ]] && [[ -f /etc/crypttab ]]; then
         # filter /etc/crypttab for the devices we need
         while read -r _mapper _dev _luksfile _luksoptions || [ -n "$_mapper" ]; do
             [[ $_mapper == \#* ]] && continue
@@ -146,7 +146,7 @@ install() {
                     fi
                 done
             fi
-        done < "$dracutsysrootdir"/etc/crypttab > "$initdir"/etc/crypttab
+        done < /etc/crypttab > "$initdir"/etc/crypttab
         mark_hostonly /etc/crypttab
     fi
 

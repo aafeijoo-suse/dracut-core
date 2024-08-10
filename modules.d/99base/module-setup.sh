@@ -29,9 +29,9 @@ install() {
     # use password for hostonly images to facilitate secure sulogin in emergency console
     [[ $hostonly ]] && pwshadow='x'
     grep '^root:' "$initdir/etc/passwd" > /dev/null 2>&1 || echo "root:$pwshadow:0:0::/root:/bin/sh" >> "$initdir/etc/passwd"
-    grep '^nobody:' "$dracutsysrootdir"/etc/passwd >> "$initdir/etc/passwd"
+    grep '^nobody:' /etc/passwd >> "$initdir/etc/passwd"
 
-    [[ $hostonly ]] && grep '^root:' "$dracutsysrootdir"/etc/shadow >> "$initdir/etc/shadow"
+    [[ $hostonly ]] && grep '^root:' /etc/shadow >> "$initdir/etc/shadow"
 
     # install our scripts and hooks
     inst_script "$moddir/rdsosreport.sh" "/sbin/rdsosreport"
@@ -66,8 +66,8 @@ install() {
     local PRETTY_NAME=""
     # Derive an os-release file from the host
     # shellcheck disable=SC1090
-    . "$dracutsysrootdir"/etc/os-release
-    grep -hE -ve '^VERSION=' -ve '^PRETTY_NAME' "$dracutsysrootdir"/etc/os-release > "${initdir}"/usr/lib/initrd-release
+    . /etc/os-release
+    grep -hE -ve '^VERSION=' -ve '^PRETTY_NAME' /etc/os-release > "${initdir}"/usr/lib/initrd-release
     [[ -n ${VERSION} ]] && VERSION+=" "
     [[ -n ${PRETTY_NAME} ]] && PRETTY_NAME+=" "
     VERSION+="dracut-$DRACUT_VERSION"

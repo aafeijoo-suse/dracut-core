@@ -13,5 +13,5 @@ install() {
         tcpdump cp dd less hostname mkdir systemd-analyze \
         fsck fsck.ext2 fsck.ext4 fsck.ext3 fsck.ext4dev fsck.f2fs fsck.vfat e2fsck
 
-    grep '^tcpdump:' "$dracutsysrootdir"/etc/passwd 2> /dev/null >> "$initdir/etc/passwd"
+    grep '^tcpdump:' /etc/passwd 2> /dev/null >> "$initdir/etc/passwd"
 }

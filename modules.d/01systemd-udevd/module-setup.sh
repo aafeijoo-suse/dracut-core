@@ -87,19 +87,19 @@ install() {
 
     # Add groups required by udev rules.
     {
-        grep '^audio:' "$dracutsysrootdir"/etc/group 2> /dev/null
-        grep '^cdrom:' "$dracutsysrootdir"/etc/group 2> /dev/null
-        grep '^dialout:' "$dracutsysrootdir"/etc/group 2> /dev/null
-        grep '^disk:' "$dracutsysrootdir"/etc/group 2> /dev/null
-        grep '^input:' "$dracutsysrootdir"/etc/group 2> /dev/null
-        grep '^kmem:' "$dracutsysrootdir"/etc/group 2> /dev/null
-        grep '^kvm:' "$dracutsysrootdir"/etc/group 2> /dev/null
-        grep '^lp:' "$dracutsysrootdir"/etc/group 2> /dev/null
-        grep '^render:' "$dracutsysrootdir"/etc/group 2> /dev/null
-        grep '^sgx:' "$dracutsysrootdir"/etc/group 2> /dev/null
-        grep '^tape:' "$dracutsysrootdir"/etc/group 2> /dev/null
-        grep '^tty:' "$dracutsysrootdir"/etc/group 2> /dev/null
-        grep '^video:' "$dracutsysrootdir"/etc/group 2> /dev/null
+        grep '^audio:' /etc/group 2> /dev/null
+        grep '^cdrom:' /etc/group 2> /dev/null
+        grep '^dialout:' /etc/group 2> /dev/null
+        grep '^disk:' /etc/group 2> /dev/null
+        grep '^input:' /etc/group 2> /dev/null
+        grep '^kmem:' /etc/group 2> /dev/null
+        grep '^kvm:' /etc/group 2> /dev/null
+        grep '^lp:' /etc/group 2> /dev/null
+        grep '^render:' /etc/group 2> /dev/null
+        grep '^sgx:' /etc/group 2> /dev/null
+        grep '^tape:' /etc/group 2> /dev/null
+        grep '^tty:' /etc/group 2> /dev/null
+        grep '^video:' /etc/group 2> /dev/null
     } >> "$initdir/etc/group"
 
     # Install the hosts local user configurations if enabled.

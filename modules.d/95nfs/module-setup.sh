@@ -87,7 +87,7 @@ install() {
         [[ $_netconf ]] && printf "%s\n" "$_netconf" >> "${initdir}/etc/cmdline.d/95nfs.conf"
     fi
 
-    if [[ -f $dracutsysrootdir/lib/modprobe.d/nfs.conf ]]; then
+    if [[ -f /lib/modprobe.d/nfs.conf ]]; then
         inst_multiple /lib/modprobe.d/nfs.conf
     else
         [[ -d $initdir/etc/modprobe.d ]] || mkdir -p "$initdir"/etc/modprobe.d
@@ -97,7 +97,7 @@ install() {
     inst_libdir_file 'libnfsidmap_nsswitch.so*' 'libnfsidmap/*.so' 'libnfsidmap*.so*'
 
     _nsslibs=$(
-        cat "$dracutsysrootdir"/{,usr/}etc/nsswitch.conf 2> /dev/null \
+        cat /{,usr/}etc/nsswitch.conf 2> /dev/null \
             | sed -e '/^#/d' -e 's/^.*://' -e 's/\[NOTFOUND=return\]//' \
             | tr -s '[:space:]' '\n' | sort -u | tr -s '[:space:]' '|'
     )
@@ -124,8 +124,8 @@ install() {
 
     # Rather than copy the passwd file in, just set a user for rpcbind
     # We'll save the state and restart the daemon from the root anyway
-    grep -E '^nfsnobody:|^rpc:|^rpcuser:' "$dracutsysrootdir"/etc/passwd >> "$initdir/etc/passwd"
-    grep -E '^nogroup:|^rpc:|^nobody:' "$dracutsysrootdir"/etc/group >> "$initdir/etc/group"
+    grep -E '^nfsnobody:|^rpc:|^rpcuser:' /etc/passwd >> "$initdir/etc/passwd"
+    grep -E '^nogroup:|^rpc:|^nobody:' /etc/group >> "$initdir/etc/group"
 
     dracut_need_initqueue
 }

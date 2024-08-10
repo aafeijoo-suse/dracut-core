@@ -51,38 +51,37 @@ find_binary() {
         # shellcheck disable=SC2154
         for l in $libdirs; do
             _path="${l}${_delim}${1}"
-            if { $DRACUT_LDD "${dracutsysrootdir}${_path}" &> /dev/null; }; then
+            if { $DRACUT_LDD "${_path}" &> /dev/null; }; then
                 printf "%s\n" "${_path}"
                 return 0
             fi
         done
         _path="${_delim}${1}"
-        if { $DRACUT_LDD "${dracutsysrootdir}${_path}" &> /dev/null; }; then
+        if { $DRACUT_LDD "${_path}" &> /dev/null; }; then
             printf "%s\n" "${_path}"
             return 0
         fi
     fi
     if [[ $1 == */* ]]; then
         _path="${_delim}${1}"
-        if [[ -L ${dracutsysrootdir}${_path} ]] || [[ -x ${dracutsysrootdir}${_path} ]]; then
+        if [[ -L ${_path} ]] || [[ -x ${_path} ]]; then
             printf "%s\n" "${_path}"
             return 0
         fi
     fi
     for p in $DRACUT_PATH; do
         _path="${p}${_delim}${1}"
-        if [[ -L ${dracutsysrootdir}${_path} ]] || [[ -x ${dracutsysrootdir}${_path} ]]; then
+        if [[ -L ${_path} ]] || [[ -x ${_path} ]]; then
             printf "%s\n" "${_path}"
             return 0
         fi
     done
 
-    [[ -n $dracutsysrootdir ]] && return 1
     type -P "${1##*/}"
 }
 
 ldconfig_paths() {
-    $DRACUT_LDCONFIG ${dracutsysrootdir:+-r ${dracutsysrootdir} -f /etc/ld.so.conf} -pN 2> /dev/null | grep -E -v '/(lib|lib64|usr/lib|usr/lib64)/[^/]*$' | sed -n 's,.* => \(.*\)/.*,\1,p' | sort | uniq
+    $DRACUT_LDCONFIG -pN 2> /dev/null | grep -E -v '/(lib|lib64|usr/lib|usr/lib64)/[^/]*$' | sed -n 's,.* => \(.*\)/.*,\1,p' | sort | uniq
 }
 
 # get_fs_env <device>
@@ -262,7 +261,7 @@ find_block_device() {
         } && return 0
     fi
     # fall back to /etc/fstab
-    [[ ! -f "$dracutsysrootdir"/etc/fstab ]] && return 1
+    [[ ! -f /etc/fstab ]] && return 1
 
     findmnt -e --fstab -v -n -o 'MAJ:MIN,SOURCE' --target "$_find_mpt" | {
         while read -r _majmin _dev || [ -n "$_dev" ]; do
@@ -313,7 +312,7 @@ find_mp_fstype() {
         } && return 0
     fi
 
-    [[ ! -f "$dracutsysrootdir"/etc/fstab ]] && return 1
+    [[ ! -f /etc/fstab ]] && return 1
 
     findmnt --fstab -e -v -n -o 'FSTYPE' --target "$1" | {
         while read -r _fs || [ -n "$_fs" ]; do
@@ -355,7 +354,7 @@ find_dev_fstype() {
         } && return 0
     fi
 
-    [[ ! -f "$dracutsysrootdir"/etc/fstab ]] && return 1
+    [[ ! -f /etc/fstab ]] && return 1
 
     findmnt --fstab -e -v -n -o 'FSTYPE' --source "$_find_dev" | {
         while read -r _fs || [ -n "$_fs" ]; do
@@ -383,7 +382,7 @@ find_mp_fsopts() {
         findmnt -e -v -n -o 'OPTIONS' --target "$1" 2> /dev/null && return 0
     fi
 
-    [[ ! -f "$dracutsysrootdir"/etc/fstab ]] && return 1
+    [[ ! -f /etc/fstab ]] && return 1
 
     findmnt --fstab -e -v -n -o 'OPTIONS' --target "$1"
 }
@@ -408,7 +407,7 @@ find_dev_fsopts() {
         findmnt -e -v -n -o 'OPTIONS' --source "$_find_dev" 2> /dev/null && return 0
     fi
 
-    [[ ! -f "$dracutsysrootdir"/etc/fstab ]] && return 1
+    [[ ! -f /etc/fstab ]] && return 1
 
     findmnt --fstab -e -v -n -o 'OPTIONS' --source "$_find_dev"
 }
@@ -591,22 +590,22 @@ fs_get_option() {
 check_kernel_config() {
     local _config_opt="$1"
     local _config_file
-    [[ -f $dracutsysrootdir/boot/config-$kernel ]] \
+    [[ -f /boot/config-$kernel ]] \
         && _config_file="/boot/config-$kernel"
-    [[ -f $dracutsysrootdir/lib/modules/$kernel/config ]] \
+    [[ -f /lib/modules/$kernel/config ]] \
         && _config_file="/lib/modules/$kernel/config"
 
     # no kernel config file, so return true
     [[ $_config_file ]] || return 0
 
-    grep -q -F "${_config_opt}=" "$dracutsysrootdir$_config_file" && return 0
+    grep -q -F "${_config_opt}=" "$_config_file" && return 0
     return 1
 }
 
 # 0 if the kernel module is either built-in or available
 # 1 if the kernel module is not enabled
 check_kernel_module() {
-    modprobe -d "$dracutsysrootdir" -S "$kernel" --dry-run "$1" &> /dev/null || return 1
+    modprobe -S "$kernel" --dry-run "$1" &> /dev/null || return 1
 }
 
 # get_cpu_vendor
@@ -1026,31 +1025,19 @@ get_dollar_boot() {
     local _dollar_boot
 
     if type -P bootctl &> /dev/null; then
-        if [[ -n $dracutsysrootdir ]]; then
-            _root_arg=(--root "$dracutsysrootdir")
-        fi
         # shellcheck disable=SC2155 disable=SC2068
         _esp=$(bootctl ${_root_arg[@]} -p 2> /dev/null)
         # shellcheck disable=SC2155 disable=SC2068
         _xbootldr=$(bootctl ${_root_arg[@]} -x 2> /dev/null)
         [[ $_xbootldr == "$_esp" ]] && unset _xbootldr
         _dollar_boot=${_xbootldr:-$_esp}
-    elif [[ -z $dracutsysrootdir ]]; then
+    else
         if mountpoint -q /efi && [[ -d /efi/EFI ]]; then
             _esp="/efi"
         elif mountpoint -q /boot/efi && [[ -d /boot/efi/EFI ]]; then
             _esp="/boot/efi"
         fi
         _dollar_boot=${_esp:-/boot}
-    else
-        if [[ -d "$dracutsysrootdir"/efi/EFI ]]; then
-            _esp="$dracutsysrootdir/efi"
-        elif [[ -d "$dracutsysrootdir"/boot/EFI ]]; then
-            _esp="$dracutsysrootdir/boot"
-        elif [[ -d "$dracutsysrootdir"/boot/efi/EFI ]]; then
-            _esp="$dracutsysrootdir/boot/efi"
-        fi
-        _dollar_boot=${_esp}
     fi
 
     echo -n "$_dollar_boot"
@@ -1097,7 +1084,7 @@ get_default_initramfs_image() {
         && [[ -d "${_dollar_boot}"/${_machine_id} || -L "${_dollar_boot}"/${_machine_id} ]]; then
         _image="${_dollar_boot}/${_machine_id}/${_kver}/initrd"
     else
-        _image="$dracutsysrootdir/boot/@INITRDPREFIX@${_kver}@INITRDSUFFIX@"
+        _image="/boot/@INITRDPREFIX@${_kver}@INITRDSUFFIX@"
     fi
 
     echo -n "$_image"
