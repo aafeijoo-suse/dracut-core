@@ -40,7 +40,8 @@ fi
 
 # The iscsi parameter from the BIOS firmware does not need argument checking
 if getargbool 0 rd.iscsi.firmware; then
-    netroot="iscsi:"
+    iscsi_transport=$(getarg rd.iscsi.transport=)
+    [ "$iscsi_transport" != bnx2i ] && netroot="iscsi:"
     modprobe -b -q iscsi_boot_sysfs 2> /dev/null
     modprobe -b -q iscsi_ibft
     # if no ip= is given, but firmware
