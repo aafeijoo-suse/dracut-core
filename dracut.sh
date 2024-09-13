@@ -1879,7 +1879,7 @@ if [[ $kernel_only != yes ]]; then
     if [[ $DRACUT_RESOLVE_LAZY ]] && [[ $DRACUT_INSTALL ]]; then
         dinfo "*** Resolving executable dependencies ***"
         # shellcheck disable=SC2086
-        find "$initdir" -type f -perm /0111 -not -path '*.ko' -print0 \
+        find "$initdir" -type f -perm /0111 -not -path '*.ko*' -print0 \
             | xargs -r -0 $DRACUT_INSTALL ${initdir:+-D "$initdir"} -R ${DRACUT_FIPS_MODE:+-f} --
         # shellcheck disable=SC2181
         if (($? == 0)); then
@@ -2103,7 +2103,7 @@ if [[ $do_strip == yes ]] && ! [[ $DRACUT_FIPS_MODE ]]; then
     # stripping files negates (dedup) benefits of using reflink
     dinfo "*** Stripping files ***"
     find "$initdir" -type f \
-        -executable -not -path '*/lib/modules/*.ko' -print0 \
+        -executable -not -path '*/lib/modules/*.ko*' -print0 \
         | xargs -r -0 $strip_cmd "${strip_args[@]}" 2> /dev/null
 
     # strip kernel modules, but do not touch signed modules
