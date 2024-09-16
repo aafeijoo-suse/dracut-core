@@ -86,13 +86,6 @@ Creates initial ramdisk images for preloading modules
 
   --kver [VERSION]      Set kernel version to [VERSION].
   -f, --force           Overwrite existing initramfs file.
-  [OUTPUT_FILE] --rebuild
-                        Append the current arguments to those with which the
-                         input initramfs image was built. This option helps in
-                         incrementally building the initramfs for testing.
-                         If optional [OUTPUT_FILE] is not provided, the input
-                         initramfs provided to rebuild will be used as output
-                         file.
   -a, --add [LIST]      Add a space-separated list of dracut modules.
   --force-add [LIST]    Force to add a space-separated list of dracut modules
                          to the default set of modules, when -H is specified.
@@ -338,7 +331,6 @@ _rearrange_params() {
             --long compress: \
             --long squash-compressor: \
             --long prefix: \
-            --long rebuild: \
             --long force \
             --long kernel-only \
             --long no-kernel \
@@ -445,28 +437,6 @@ unset outfile
 _rearrange_params "$@"
 eval set -- "$TEMP"
 
-# parse command line args to check if '--rebuild' option is present
-unset append_args_l
-unset rebuild_file
-while :; do
-    if [ "$1" == "--" ]; then
-        shift
-        break
-    fi
-    if [ "$1" == "--rebuild" ]; then
-        append_args_l="yes"
-        rebuild_file="$2"
-        if [ ! -e "$rebuild_file" ]; then
-            echo "Image file '$rebuild_file', for rebuild, does not exist!"
-            exit 1
-        fi
-        abs_rebuild_file=$(readlink -f "$rebuild_file") && rebuild_file="$abs_rebuild_file"
-        shift
-        continue
-    fi
-    shift
-done
-
 # get output file name and kernel version from command line arguments
 while (($# > 0)); do
     case ${1%%=*} in
@@ -488,35 +458,13 @@ while (($# > 0)); do
     shift
 done
 
-# extract input image file provided with rebuild option to get previous parameters, if any
-if [[ $append_args_l == "yes" ]]; then
-    unset rebuild_param
-
-    # determine resultant file
-    if ! [[ $outfile ]]; then
-        outfile=$rebuild_file
-    fi
-
-    if ! rebuild_param=$(lsinitrd "$rebuild_file" '*lib/dracut/build-parameter.txt'); then
-        echo "Image '$rebuild_file' has no rebuild information stored"
-        exit 1
-    fi
-
-    # prepend previous parameters to current command line args
-    if [[ $rebuild_param ]]; then
-        TEMP="$rebuild_param $TEMP"
-        eval set -- "$TEMP"
-        _rearrange_params "$@"
-    fi
-fi
-
 unset PARMS_TO_STORE
 PARMS_TO_STORE=""
 
 eval set -- "$TEMP"
 
 while :; do
-    if [[ $1 != "--" ]] && [[ $1 != "--rebuild" ]]; then
+    if [[ $1 != "--" ]]; then
         PARMS_TO_STORE+=" $1"
     fi
     case $1 in
@@ -660,12 +608,6 @@ while :; do
         --loginstall)
             loginstall_l="$2"
             PARMS_TO_STORE+=" '$2'"
-            shift
-            ;;
-        --rebuild)
-            if [[ $rebuild_file == "$outfile" ]]; then
-                force=yes
-            fi
             shift
             ;;
         -f | --force) force=yes ;;
