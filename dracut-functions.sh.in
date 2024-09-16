@@ -587,39 +587,6 @@ fs_get_option() {
     done
 }
 
-check_conf_file() {
-    if grep -H -e '^[^#]*[+]=\("[^ ]\|.*[^ ]"\)' "$@"; then
-        printf '\ndracut[W]: <key>+=" <values> ": <values> should have surrounding white spaces!\n' >&2
-        printf 'dracut[W]: This will lead to unwanted side effects! Please fix the configuration file.\n\n' >&2
-    fi
-}
-
-dropindirs_sort() {
-    local suffix=$1
-    shift
-    local -a files
-    local f d
-
-    for d in "$@"; do
-        for i in "$d/"*"$suffix"; do
-            if [[ -e $i ]]; then
-                printf "%s\n" "${i##*/}"
-            fi
-        done
-    done | sort -Vu | {
-        readarray -t files
-
-        for f in "${files[@]}"; do
-            for d in "$@"; do
-                if [[ -e "$d/$f" ]]; then
-                    printf "%s\n" "$d/$f"
-                    continue 2
-                fi
-            done
-        done
-    }
-}
-
 check_kernel_config() {
     local _config_opt="$1"
     local _config_file

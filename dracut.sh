@@ -286,6 +286,39 @@ _long_version() {
     echo "dracut $DRACUT_VERSION"
 }
 
+_check_conf_file() {
+    if grep -H -e '^[^#]*[+]=\("[^ ]\|.*[^ ]"\)' "$@"; then
+        printf '\ndracut[W]: <key>+=" <values> ": <values> should have surrounding white spaces!\n' >&2
+        printf 'dracut[W]: This will lead to unwanted side effects! Please fix the configuration file.\n\n' >&2
+    fi
+}
+
+_dropindirs_sort() {
+    local suffix=$1
+    shift
+    local -a files
+    local f d
+
+    for d in "$@"; do
+        for i in "$d/"*"$suffix"; do
+            if [[ -e $i ]]; then
+                printf "%s\n" "${i##*/}"
+            fi
+        done
+    done | sort -Vu | {
+        readarray -t files
+
+        for f in "${files[@]}"; do
+            for d in "$@"; do
+                if [[ -e "$d/$f" ]]; then
+                    printf "%s\n" "$d/$f"
+                    continue 2
+                fi
+            done
+        done
+    }
+}
+
 _rearrange_params() {
     # Workaround -i, --include taking 2 arguments
     newat=()
@@ -436,6 +469,14 @@ unset outfile
 
 _rearrange_params "$@"
 eval set -- "$TEMP"
+
+while :; do
+    if [ "$1" == "--" ]; then
+        shift
+        break
+    fi
+    shift
+done
 
 # get output file name and kernel version from command line arguments
 while (($# > 0)); do
@@ -792,14 +833,14 @@ fi
 
 # source our config file
 if [[ -f $conffile ]]; then
-    check_conf_file "$conffile"
+    _check_conf_file "$conffile"
     # shellcheck disable=SC1090
     . "$conffile"
 fi
 
 # source our config dir
-for f in $(dropindirs_sort ".conf" "$confdir" "$dracutbasedir/dracut.conf.d"); do
-    check_conf_file "$f"
+for f in $(_dropindirs_sort ".conf" "$confdir" "$dracutbasedir/dracut.conf.d"); do
+    _check_conf_file "$f"
     # shellcheck disable=SC1090
     [[ -e $f ]] && . "$f"
 done
