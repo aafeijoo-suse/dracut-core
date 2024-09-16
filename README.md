@@ -1,16 +1,12 @@
-dracutla
+dracut-core
 ====
-
-Like the vampire, but instead of blood, it feeds on
-[dracut](https://github.com/dracutdevs/dracut) code (it especially finds
-non-systemd code appetizing).
 
 OBS devel repo for openSUSE Tumbleweed:
 
 ```
-$ zypper ar https://download.opensuse.org/repositories/home:/afeijoo:/devel/openSUSE_Tumbleweed/?ssl_verify=no dracutla
-$ zypper ref dracutla
-$ zypper in --from dracutla dracut
+$ zypper ar https://download.opensuse.org/repositories/home:/afeijoo:/devel/openSUSE_Tumbleweed/?ssl_verify=no dracut-core
+$ zypper ref dracut-core
+$ zypper in --from dracut-core dracut
 ```
 
 - for Slowroll: `s/Tumbleweed/Slowroll/`

@@ -1,5 +1,5 @@
 #
-# spec file for package dracutla
+# spec file for package dracut-core
 #
 # Copyright (c) 2024 SUSE LLC
 #
@@ -23,7 +23,7 @@ Release:        0
 Summary:        Event driven initramfs infrastructure
 License:        GPLv2+ and LGPLv2+ and GPLv2
 Group:          System/Base
-URL:            https://github.com/aafeijoo-suse/dracutla
+URL:            https://github.com/aafeijoo-suse/dracut-core
 Source0:        dracut-%{version}.tar.xz
 Source1:        dracut-rpmlintrc
 BuildRequires:  asciidoc
