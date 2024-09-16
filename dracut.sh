@@ -43,7 +43,7 @@ readonly dracut_cmd=$(readlink -f "$0")
 
 set -o pipefail
 
-usage() {
+_usage() {
     [[ $dracutbasedir ]] || dracutbasedir=/usr/lib/dracut
     if [[ -f $dracutbasedir/dracut-version.sh ]]; then
         # shellcheck source=./dracut-version.sh
@@ -69,7 +69,7 @@ For example:
 EOF
 }
 
-long_usage() {
+_long_usage() {
     [[ $dracutbasedir ]] || dracutbasedir=/usr/lib/dracut
     if [[ -f $dracutbasedir/dracut-version.sh ]]; then
         # shellcheck source=./dracut-version.sh
@@ -288,7 +288,7 @@ For example:
 EOF
 }
 
-long_version() {
+_long_version() {
     [[ $dracutbasedir ]] || dracutbasedir=/usr/lib/dracut
     if [[ -f $dracutbasedir/dracut-version.sh ]]; then
         # shellcheck source=./dracut-version.sh
@@ -297,50 +297,7 @@ long_version() {
     echo "dracut $DRACUT_VERSION"
 }
 
-# Fills up host_devs stack variable and makes sure there are no duplicates
-push_host_devs() {
-    local _dev
-    for _dev in "$@"; do
-        [[ -z $_dev ]] && continue
-        [[ " ${host_devs[*]} " == *" $_dev "* ]] && return
-        host_devs+=("$_dev")
-    done
-}
-
-check_conf_file() {
-    if grep -H -e '^[^#]*[+]=\("[^ ]\|.*[^ ]"\)' "$@"; then
-        printf '\ndracut[W]: <key>+=" <values> ": <values> should have surrounding white spaces!\n' >&2
-        printf 'dracut[W]: This will lead to unwanted side effects! Please fix the configuration file.\n\n' >&2
-    fi
-}
-
-dropindirs_sort() {
-    local suffix=$1
-    shift
-    local -a files
-    local f d
-
-    for d in "$@"; do
-        for i in "$d/"*"$suffix"; do
-            if [[ -e $i ]]; then
-                printf "%s\n" "${i##*/}"
-            fi
-        done
-    done | sort -Vu | {
-        readarray -t files
-
-        for f in "${files[@]}"; do
-            for d in "$@"; do
-                if [[ -e "$d/$f" ]]; then
-                    printf "%s\n" "$d/$f"
-                    continue 2
-                fi
-            done
-        done
-    }
-}
-
-rearrange_params() {
+_rearrange_params() {
     # Workaround -i, --include taking 2 arguments
     newat=()
     for i in "$@"; do
@@ -451,16 +408,46 @@ rearrange_params() {
 
     # shellcheck disable=SC2181
     if (($? != 0)); then
-        usage
+        _usage
         exit 1
     fi
+}
+
+declare -a host_devs
+declare -A host_fs_types
+
+# Fills up host_devs stack variable and makes sure there are no duplicates
+_push_host_devs() {
+    local _dev
+    for _dev in "$@"; do
+        [[ -z $_dev ]] && continue
+        [[ " ${host_devs[*]} " == *" $_dev "* ]] && return
+        host_devs+=("$_dev")
+    done
+}
+
+_get_fs_type() {
+    [[ $1 ]] || return
+    if [[ -b /dev/block/$1 ]]; then
+        ID_FS_TYPE=$(get_fs_env "/dev/block/$1") && host_fs_types["$(readlink -f "/dev/block/$1")"]="$ID_FS_TYPE"
+        return 1
+    fi
+    if [[ -b $1 ]]; then
+        ID_FS_TYPE=$(get_fs_env "$1") && host_fs_types["$(readlink -f "$1")"]="$ID_FS_TYPE"
+        return 1
+    fi
+    if fstype=$(find_dev_fstype "$1"); then
+        host_fs_types["$1"]="$fstype"
+        return 1
+    fi
+    return 1
 }
 
 verbosity_mod_l=0
 unset kernel
 unset outfile
 
-rearrange_params "$@"
+_rearrange_params "$@"
 eval set -- "$TEMP"
 
 # parse command line args to check if '--rebuild' option is present
@@ -498,7 +485,7 @@ while (($# > 0)); do
                 kernel=$1
             else
                 printf "\nUnknown arguments: %s\n\n" "$*" >&2
-                usage
+                _usage
                 exit 1
             fi
             ;;
@@ -524,7 +511,7 @@ if [[ $append_args_l == "yes" ]]; then
     if [[ $rebuild_param ]]; then
         TEMP="$rebuild_param $TEMP"
         eval set -- "$TEMP"
-        rearrange_params "$@"
+        _rearrange_params "$@"
     fi
 fi
 
@@ -773,7 +760,7 @@ while :; do
             ;;
         --fstab) use_fstab_l="yes" ;;
         -h | --help)
-            long_usage
+            _long_usage
             exit 0
             ;;
         --bzip2) compress_l="bzip2" ;;
@@ -803,7 +790,7 @@ while :; do
             create_sysusers_l="no"
             ;;
         --version)
-            long_version
+            _long_version
             exit 0
             ;;
         --)
@@ -813,7 +800,7 @@ while :; do
 
         *) # should not even reach this point
             printf "\n!Unknown option: '%s'\n\n" "$1" >&2
-            usage
+            _usage
             exit 1
             ;;
     esac
@@ -1273,8 +1260,8 @@ esac
 abs_outfile=$(readlink -f "$outfile") && outfile="$abs_outfile"
 
 # Helper function to set global variables
-# set_global_var <pkg_config> <var> <value[:check_file]> [<value[:check_file]>] ...
-set_global_var() {
+# _set_global_var <pkg_config> <var> <value[:check_file]> [<value[:check_file]>] ...
+_set_global_var() {
     local _pkgconfig="$1"
     local _var="$2"
     [[ -z ${!_var} || ! -d ${!_var} ]] \
@@ -1295,53 +1282,53 @@ set_global_var() {
 }
 
 # dbus global variables
-set_global_var "dbus" "dbus" "/usr/share/dbus-1"
-set_global_var "dbus" "dbusconfdir" "/etc/dbus-1"
-set_global_var "dbus" "dbusinterfaces" "${dbus}/interfaces"
-set_global_var "dbus" "dbusinterfacesconfdir" "${dbusconfdir}/interfaces"
-set_global_var "dbus" "dbusservices" "${dbus}/services"
-set_global_var "dbus" "dbusservicesconfdir" "${dbusconfdir}/services"
-set_global_var "dbus" "dbussession" "${dbus}/session.d"
-set_global_var "dbus" "dbussessionconfdir" "${dbusconfdir}/session.d"
-set_global_var "dbus" "dbussystem" "${dbus}/system.d"
-set_global_var "dbus" "dbussystemconfdir" "${dbusconfdir}/system.d"
-set_global_var "dbus" "dbussystemservices" "${dbus}/system-services"
-set_global_var "dbus" "dbussystemservicesconfdir" "${dbusconfdir}/system-services"
+_set_global_var "dbus" "dbus" "/usr/share/dbus-1"
+_set_global_var "dbus" "dbusconfdir" "/etc/dbus-1"
+_set_global_var "dbus" "dbusinterfaces" "${dbus}/interfaces"
+_set_global_var "dbus" "dbusinterfacesconfdir" "${dbusconfdir}/interfaces"
+_set_global_var "dbus" "dbusservices" "${dbus}/services"
+_set_global_var "dbus" "dbusservicesconfdir" "${dbusconfdir}/services"
+_set_global_var "dbus" "dbussession" "${dbus}/session.d"
+_set_global_var "dbus" "dbussessionconfdir" "${dbusconfdir}/session.d"
+_set_global_var "dbus" "dbussystem" "${dbus}/system.d"
+_set_global_var "dbus" "dbussystemconfdir" "${dbusconfdir}/system.d"
+_set_global_var "dbus" "dbussystemservices" "${dbus}/system-services"
+_set_global_var "dbus" "dbussystemservicesconfdir" "${dbusconfdir}/system-services"
 
 # udev global variables
-set_global_var "udev" "udevdir" "/lib/udev:/lib/udev/ata_id" "/usr/lib/udev:/usr/lib/udev/ata_id"
-set_global_var "udev" "udevconfdir" "/etc/udev"
-set_global_var "udev" "udevrulesdir" "${udevdir}/rules.d"
-set_global_var "udev" "udevrulesconfdir" "${udevconfdir}/rules.d"
+_set_global_var "udev" "udevdir" "/lib/udev:/lib/udev/ata_id" "/usr/lib/udev:/usr/lib/udev/ata_id"
+_set_global_var "udev" "udevconfdir" "/etc/udev"
+_set_global_var "udev" "udevrulesdir" "${udevdir}/rules.d"
+_set_global_var "udev" "udevrulesconfdir" "${udevconfdir}/rules.d"
 
 # systemd global variables
-set_global_var "systemd" "systemdutildir" "/lib/systemd:/lib/systemd/systemd-udevd" "/usr/lib/systemd:/usr/lib/systemd/systemd-udevd"
-set_global_var "systemd" "systemdutilconfdir" "/etc/systemd"
-set_global_var "systemd" "environment" "/usr/lib/environment.d"
-set_global_var "systemd" "environmentconfdir" "/etc/environment.d"
-set_global_var "systemd" "modulesload" "/usr/lib/modules-load.d"
-set_global_var "systemd" "modulesloadconfdir" "/etc/modules-load.d"
-set_global_var "systemd" "sysctld" "/usr/lib/sysctl.d"
-set_global_var "systemd" "sysctlconfdir" "/etc/sysctl.d"
-set_global_var "systemd" "systemdcatalog" "${systemdutildir}/catalog"
-set_global_var "systemd" "systemdnetwork" "${systemdutildir}/network"
-set_global_var "systemd" "systemdnetworkconfdir" "${systemdutilconfdir}/network"
-set_global_var "systemd" "systemdntpunits" "${systemdutildir}/ntp-units.d"
-set_global_var "systemd" "systemdntpunitsconfdir" "${systemdutilconfdir}/ntp-units.d"
-set_global_var "systemd" "systemdportable" "${systemdutildir}/portable"
-set_global_var "systemd" "systemdportableconfdir" "${systemdutilconfdir}/portable"
-set_global_var "systemd" "systemdsystemunitdir" "${systemdutildir}/system"
-set_global_var "systemd" "systemdsystemconfdir" "${systemdutilconfdir}/system"
-set_global_var "systemd" "systemduser" "${systemdutildir}/user"
-set_global_var "systemd" "systemduserconfdir" "${systemdutilconfdir}/user"
-set_global_var "systemd" "sysusers" "/usr/lib/sysusers.d"
-set_global_var "systemd" "sysusersconfdir" "/etc/sysusers.d"
-set_global_var "systemd" "tmpfilesdir" "/lib/tmpfiles.d" "/usr/lib/tmpfiles.d"
-set_global_var "systemd" "tmpfilesconfdir" "/etc/tmpfiles.d"
+_set_global_var "systemd" "systemdutildir" "/lib/systemd:/lib/systemd/systemd-udevd" "/usr/lib/systemd:/usr/lib/systemd/systemd-udevd"
+_set_global_var "systemd" "systemdutilconfdir" "/etc/systemd"
+_set_global_var "systemd" "environment" "/usr/lib/environment.d"
+_set_global_var "systemd" "environmentconfdir" "/etc/environment.d"
+_set_global_var "systemd" "modulesload" "/usr/lib/modules-load.d"
+_set_global_var "systemd" "modulesloadconfdir" "/etc/modules-load.d"
+_set_global_var "systemd" "sysctld" "/usr/lib/sysctl.d"
+_set_global_var "systemd" "sysctlconfdir" "/etc/sysctl.d"
+_set_global_var "systemd" "systemdcatalog" "${systemdutildir}/catalog"
+_set_global_var "systemd" "systemdnetwork" "${systemdutildir}/network"
+_set_global_var "systemd" "systemdnetworkconfdir" "${systemdutilconfdir}/network"
+_set_global_var "systemd" "systemdntpunits" "${systemdutildir}/ntp-units.d"
+_set_global_var "systemd" "systemdntpunitsconfdir" "${systemdutilconfdir}/ntp-units.d"
+_set_global_var "systemd" "systemdportable" "${systemdutildir}/portable"
+_set_global_var "systemd" "systemdportableconfdir" "${systemdutilconfdir}/portable"
+_set_global_var "systemd" "systemdsystemunitdir" "${systemdutildir}/system"
+_set_global_var "systemd" "systemdsystemconfdir" "${systemdutilconfdir}/system"
+_set_global_var "systemd" "systemduser" "${systemdutildir}/user"
+_set_global_var "systemd" "systemduserconfdir" "${systemdutilconfdir}/user"
+_set_global_var "systemd" "sysusers" "/usr/lib/sysusers.d"
+_set_global_var "systemd" "sysusersconfdir" "/etc/sysusers.d"
+_set_global_var "systemd" "tmpfilesdir" "/lib/tmpfiles.d" "/usr/lib/tmpfiles.d"
+_set_global_var "systemd" "tmpfilesconfdir" "/etc/tmpfiles.d"
 
 # libkmod global variables
-set_global_var "libkmod" "depmodd" "/usr/lib/depmod.d"
-set_global_var "libkmod" "depmodconfdir" "/etc/depmod.d"
+_set_global_var "libkmod" "depmodd" "/usr/lib/depmod.d"
+_set_global_var "libkmod" "depmodconfdir" "/etc/depmod.d"
 
 if [[ $no_kernel != yes ]] && [[ -d $srcmods ]]; then
     if ! [[ -f $srcmods/modules.dep ]]; then
@@ -1422,8 +1409,6 @@ if [[ $hostonly ]]; then
     done
 fi
 
-declare -A host_fs_types
-
 for line in "${fstab_lines[@]}"; do
     # shellcheck disable=SC2086
     set -- $line
@@ -1447,32 +1432,32 @@ for line in "${fstab_lines[@]}"; do
     if [[ $3 == btrfs ]]; then
         for mp in $(findmnt --source "$1" -o TARGET -n); do
             for i in $(btrfs_devs "$mp"); do
-                push_host_devs "$i"
+                _push_host_devs "$i"
             done
         done
     elif [[ $3 == zfs ]]; then
         for mp in $(zfs_devs "$1"); do
-            push_host_devs "$mp"
+            _push_host_devs "$mp"
         done
     fi
-    push_host_devs "$dev"
+    _push_host_devs "$dev"
     host_fs_types["$dev"]="$3"
 done
 
 for f in $add_fstab; do
     [[ -e $f ]] || continue
     while read -r dev _ || [ -n "$dev" ]; do
-        push_host_devs "$dev"
+        _push_host_devs "$dev"
     done < "$f"
 done
 
 for dev in $add_device; do
-    push_host_devs "$dev"
+    _push_host_devs "$dev"
 done
 
 if ((${#add_device_l[@]})); then
     add_device+=" ${add_device_l[*]} "
-    push_host_devs "${add_device_l[@]}"
+    _push_host_devs "${add_device_l[@]}"
 fi
 
 if [[ $hostonly ]] && [[ $hostonly_default_device != "no" ]]; then
@@ -1499,17 +1484,17 @@ if [[ $hostonly ]] && [[ $hostonly_default_device != "no" ]]; then
         _bdev=$(readlink -f "/dev/block/$_dev")
         [[ -b $_bdev ]] && _dev=$_bdev
         [[ $mp == "/" ]] && root_devs+=("$_dev")
-        push_host_devs "$_dev"
+        _push_host_devs "$_dev"
         _mp_fstype=$(find_mp_fstype "$mp")
         if [[ $_mp_fstype == btrfs ]]; then
             for i in $(btrfs_devs "$mp"); do
                 [[ $mp == "/" ]] && root_devs+=("$i")
-                push_host_devs "$i"
+                _push_host_devs "$i"
             done
         elif [[ $_mp_fstype == zfs ]]; then
             for i in $(zfs_devs "$(findmnt -n -o SOURCE "$mp")"); do
                 [[ $mp == "/" ]] && root_devs+=("$i")
-                push_host_devs "$i"
+                _push_host_devs "$i"
             done
         fi
 
@@ -1542,7 +1527,7 @@ if [[ $hostonly ]] && [[ $hostonly_default_device != "no" ]]; then
                 fi
 
                 _dev="$(readlink -f "$dev")"
-                push_host_devs "$_dev"
+                _push_host_devs "$_dev"
                 swap_devs+=("$_dev")
                 break
             done < /etc/fstab
@@ -1559,36 +1544,19 @@ if [[ $hostonly ]] && [[ $hostonly_default_device != "no" ]]; then
             _dev="$(readlink -f "$_dev")"
             [[ -b $_dev ]] || continue
 
-            push_host_devs "$_dev"
+            _push_host_devs "$_dev"
             if [[ $_t == btrfs ]]; then
                 for i in $(btrfs_devs "$_m"); do
-                    push_host_devs "$i"
+                    _push_host_devs "$i"
                 done
             elif [[ $_t == zfs ]]; then
                 for i in $(zfs_devs "$_d"); do
-                    push_host_devs "$i"
+                    _push_host_devs "$i"
                 done
             fi
         done < /etc/fstab
     fi
 fi
-
-_get_fs_type() {
-    [[ $1 ]] || return
-    if [[ -b /dev/block/$1 ]]; then
-        ID_FS_TYPE=$(get_fs_env "/dev/block/$1") && host_fs_types["$(readlink -f "/dev/block/$1")"]="$ID_FS_TYPE"
-        return 1
-    fi
-    if [[ -b $1 ]]; then
-        ID_FS_TYPE=$(get_fs_env "$1") && host_fs_types["$(readlink -f "$1")"]="$ID_FS_TYPE"
-        return 1
-    fi
-    if fstype=$(find_dev_fstype "$1"); then
-        host_fs_types["$1"]="$fstype"
-        return 1
-    fi
-    return 1
-}
 
 for dev in "${host_devs[@]}"; do
     _get_fs_type "$dev"
@@ -1605,7 +1573,7 @@ for dev in "${!host_fs_types[@]}"; do
     fi
     if [[ $journaldev ]]; then
         dev="$(readlink -f "$dev")"
-        push_host_devs "$dev"
+        _push_host_devs "$dev"
         _get_fs_type "$dev"
         check_block_and_slaves_all _get_fs_type "$(get_maj_min "$dev")"
     fi
@@ -1633,7 +1601,7 @@ fi
 
 dracut_module_included "fips" && export DRACUT_FIPS_MODE=1
 
-do_print_cmdline() {
+_do_print_cmdline() {
     local -A _mods_to_print
     for i in $modules_loaded $mods_to_load; do
         _mods_to_print[$i]=1
@@ -1650,7 +1618,7 @@ do_print_cmdline() {
 }
 
 if [[ $print_cmdline ]]; then
-    do_print_cmdline
+    _do_print_cmdline
     printf "\n"
     exit 0
 fi
@@ -2272,49 +2240,6 @@ else
     dfatal "Creation of $outfile failed"
     exit 1
 fi
-
-btrfs_uuid() {
-    btrfs filesystem show "$1" | sed -n '1s/^.*uuid: //p'
-}
-
-freeze_ok_for_btrfs() {
-    local mnt uuid1 uuid2
-    # If the output file is on btrfs, we need to make sure that it's
-    # not on a subvolume of the same file system as the root FS.
-    # Otherwise, fsfreeze() might freeze the entire system.
-    # This is most conveniently checked by comparing the FS uuid.
-
-    [[ "$(stat -f -c %T -- "/")" == "btrfs" ]] || return 0
-    mnt=$(stat -c %m -- "$1")
-    uuid1=$(btrfs_uuid "$mnt")
-    uuid2=$(btrfs_uuid "/")
-    [[ $uuid1 && $uuid2 && $uuid1 != "$uuid2" ]]
-}
-
-freeze_ok_for_fstype() {
-    local outfile=$1
-    local fstype
-
-    [[ "$(stat -c %m -- "$outfile")" == "/" ]] && return 1
-    fstype=$(stat -f -c %T -- "$outfile")
-    case $fstype in
-        msdos)
-            return 1
-            ;;
-        zfs)
-            return 1
-            ;;
-        tmpfs)
-            return 1
-            ;;
-        btrfs)
-            freeze_ok_for_btrfs "$outfile"
-            ;;
-        *)
-            return 0
-            ;;
-    esac
-}
 
 # We sync/fsfreeze only if we're operating on a live booted system.
 # It's possible for e.g. `kernel` to be installed as an RPM BuildRequires or equivalent,
