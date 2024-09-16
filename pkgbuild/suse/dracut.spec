@@ -317,11 +317,6 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %{_mandir}/man8/dracut-shutdown.service.8.*
 %{_mandir}/man5/dracut.conf.5*
 
-%dir %{_prefix}/lib/kernel
-%dir %{_prefix}/lib/kernel/install.d
-%{_prefix}/lib/kernel/install.d/50-dracut.install
-%{_prefix}/lib/kernel/install.d/51-dracut-rescue.install
-
 %dir %{dracutlibdir}
 %{dracutlibdir}/skipcpio
 %{dracutlibdir}/dracut-functions.sh
