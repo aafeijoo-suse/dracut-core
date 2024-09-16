@@ -40,8 +40,6 @@ install() {
         "$sysusers"/systemd-coredump.conf \
         coredumpctl
 
-    inst_hook cleanup 99 "$moddir/persist-coredump.sh"
-
     # Install library file(s)
     _arch=${DRACUT_ARCH:-$(uname -m)}
     inst_libdir_file \
