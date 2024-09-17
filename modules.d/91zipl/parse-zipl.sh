@@ -45,7 +45,7 @@ if [ -n "$zipl_arg" ]; then
                 ${zipl_env} "${zipl_val}" "${zipl_arg}"
             echo "[ -f /tmp/install.zipl.cmdline-done ]" > "$hookdir"/initqueue/finished/wait-zipl-conf.sh
         } >> /etc/udev/rules.d/99zipl-conf.rules
-        cat /etc/udev/rules.d/99zipl-conf.rules
+        echo "$(< /etc/udev/rules.d/99zipl-conf.rules)"
     fi
     wait_for_dev -n "$zipl_arg"
 fi

@@ -14,7 +14,7 @@ if [ -n "$overlayfs" ]; then
         ovlfs=lowerdir=/run/rootfsbase
     fi
 
-    if ! strstr "$(cat /proc/mounts)" LiveOS_rootfs; then
+    if ! strstr "$(< /proc/mounts)" LiveOS_rootfs; then
         mount -t overlay LiveOS_rootfs -o "$ROOTFLAGS,$ovlfs",upperdir=/run/overlayfs,workdir=/run/ovlwork "$NEWROOT"
     fi
 fi

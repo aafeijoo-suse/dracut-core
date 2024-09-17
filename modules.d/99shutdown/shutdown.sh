@@ -102,7 +102,7 @@ done
 
 [ $_cnt -ge 40 ] && umount_a -v
 
-if strstr "$(cat /proc/mounts)" "/oldroot"; then
+if strstr "$(< /proc/mounts)" "/oldroot"; then
     warn "Cannot umount /oldroot"
     for _pid in /proc/*; do
         _pid=${_pid##/proc/}
@@ -115,9 +115,9 @@ if strstr "$(cat /proc/mounts)" "/oldroot"; then
         [ -e "/proc/$_pid/root" ] || continue
 
         if strstr "$(ls -l /proc/"$_pid" /proc/"$_pid"/fd 2> /dev/null)" "oldroot"; then
-            warn "Blocking umount of /oldroot [$_pid] $(cat /proc/"$_pid"/cmdline)"
+            warn "Blocking umount of /oldroot [$_pid] $(< /proc/"$_pid"/cmdline)"
         else
-            warn "Still running [$_pid] $(cat /proc/"$_pid"/cmdline)"
+            warn "Still running [$_pid] $(< /proc/"$_pid"/cmdline)"
         fi
 
         # shellcheck disable=SC2012

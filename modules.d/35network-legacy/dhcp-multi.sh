@@ -89,7 +89,7 @@ if [ $ret -eq 0 ]; then
     : > /tmp/net."${netif}".up
 
     if [ -z "$do_vlan" ] && [ -e /sys/class/net/"${netif}"/address ]; then
-        : > "/tmp/net.$(cat /sys/class/net/"${netif}"/address).up"
+        : > "/tmp/net.$(< /sys/class/net/"${netif}"/address).up"
     fi
 
     # Check if DHCP also suceeded on another interface before this one.

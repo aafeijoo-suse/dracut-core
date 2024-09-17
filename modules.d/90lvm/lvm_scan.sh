@@ -98,7 +98,7 @@ if no_lvm_conf_filter; then
         echo '}'
     } > /etc/lvm/lvm.conf.filter
     lvmfilter=1
-    cat /etc/lvm/lvm.conf.orig /etc/lvm/lvm.conf.filter > /etc/lvm/lvm.conf
+    echo "$(< /etc/lvm/lvm.conf.orig)$(< /etc/lvm/lvm.conf.filter)" > /etc/lvm/lvm.conf
 fi
 
 # hopefully this output format will never change, e.g.:

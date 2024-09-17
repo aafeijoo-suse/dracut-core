@@ -519,7 +519,7 @@ if [ -z "$NO_BOND_MASTER" ]; then
             linkup "$bondname"
 
             for slave in $bondslaves; do
-                cat "/sys/class/net/$slave/address" > "/tmp/net.${bondname}.${slave}.hwaddr"
+                echo "$(< "/sys/class/net/$slave/address")" > "/tmp/net.${bondname}.${slave}.hwaddr"
                 ip link set "$slave" down
                 echo "+$slave" > "/sys/class/net/$bondname/bonding/slaves"
                 linkup "$slave"
@@ -633,7 +633,7 @@ else
     [ -e "/tmp/net.${netif}.did-setup" ] && exit 0
     [ -z "$DO_VLAN" ] \
         && [ -e "/sys/class/net/$netif/address" ] \
-        && [ -e "/tmp/net.$(cat "/sys/class/net/$netif/address").did-setup" ] && exit 0
+        && [ -e "/tmp/net.$(< "/sys/class/net/$netif/address").did-setup" ] && exit 0
 fi
 
 
@@ -710,7 +710,7 @@ for p in $(getargs ip=); do
         : > "/tmp/net.${netif}.up"
 
         if [ -z "$DO_VLAN" ] && [ -e "/sys/class/net/${netif}/address" ]; then
-            : > "/tmp/net.$(cat "/sys/class/net/${netif}/address").up"
+            : > "/tmp/net.$(< "/sys/class/net/${netif}/address").up"
         fi
 
         # and finally, finish interface set up if there isn't already a script
@@ -736,7 +736,7 @@ if [ -z "$NO_AUTO_DHCP" ] && [ ! -e "/tmp/net.${netif}.up" ]; then
     ret=1
     if [ -e /tmp/net.bootdev ]; then
         read -r BOOTDEV < /tmp/net.bootdev
-        if [ "$netif" = "$BOOTDEV" ] || [ "$BOOTDEV" = "$(cat "/sys/class/net/${netif}/address")" ]; then
+        if [ "$netif" = "$BOOTDEV" ] || [ "$BOOTDEV" = "$(< "/sys/class/net/${netif}/address")" ]; then
             do_dhcp
             ret=$?
         fi
@@ -763,7 +763,7 @@ if [ -z "$NO_AUTO_DHCP" ] && [ ! -e "/tmp/net.${netif}.up" ]; then
     if [ "$ret" -eq 0 ] && [ -n "$(ls "/tmp/leaseinfo.${netif}"* 2> /dev/null)" ]; then
         : > "/tmp/net.${netif}.did-setup"
         if [ -e "/sys/class/net/${netif}/address" ]; then
-            : > "/tmp/net.$(cat "/sys/class/net/${netif}/address").did-setup"
+            : > "/tmp/net.$(< "/sys/class/net/${netif}/address").did-setup"
         fi
     fi
 fi

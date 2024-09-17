@@ -40,7 +40,7 @@ iface_for_mac() {
     local mac
     mac="$(echo "$@" | sed 'y/ABCDEF/abcdef/')"
     for interface in /sys/class/net/*; do
-        if [ "$(cat "$interface"/address)" = "$mac" ]; then
+        if [ "$(< "$interface"/address)" = "$mac" ]; then
             echo "${interface##*/}"
         fi
     done
@@ -117,7 +117,7 @@ ifdown() {
     rm -f -- /tmp/net."$netif".did-setup
     [ -z "$DO_VLAN" ] \
         && [ -e /sys/class/net/"$netif"/address ] \
-        && rm -f -- "/tmp/net.$(cat /sys/class/net/"$netif"/address).did-setup"
+        && rm -f -- "/tmp/net.$(< /sys/class/net/"$netif"/address).did-setup"
     # TODO: send "offline" uevent?
 }
 
@@ -127,7 +127,7 @@ setup_net() {
     [ -e /tmp/net."$netif".did-setup ] && return
     [ -z "$DO_VLAN" ] \
         && [ -e /sys/class/net/"$netif"/address ] \
-        && [ -e "/tmp/net.$(cat /sys/class/net/"$netif"/address).did-setup" ] && return
+        && [ -e "/tmp/net.$(< /sys/class/net/"$netif"/address).did-setup" ] && return
     [ -e "/tmp/net.ifaces" ] && read -r IFACES < /tmp/net.ifaces
     [ -z "$IFACES" ] && IFACES="$netif"
     # run the scripts written by ifup
@@ -203,7 +203,7 @@ setup_net() {
     : > /tmp/net."$netif".did-setup
     [ -z "$DO_VLAN" ] \
         && [ -e /sys/class/net/"$netif"/address ] \
-        && : > "/tmp/net.$(cat /sys/class/net/"$netif"/address).did-setup"
+        && : > "/tmp/net.$(< /sys/class/net/"$netif"/address).did-setup"
 }
 
 save_netinfo() {
@@ -763,7 +763,7 @@ linkup() {
 
 type hostname > /dev/null 2>&1 \
     || hostname() {
-        cat /proc/sys/kernel/hostname
+        echo "$(< /proc/sys/kernel/hostname)"
     }
 
 iface_has_carrier() {
@@ -793,7 +793,7 @@ iface_has_carrier() {
             return 0
         fi
         # double check the syscfs carrier flag
-        [ -e "$iface_sys_path/carrier" ] && [ "$(cat "$iface_sys_path"/carrier)" = 1 ] && return 0
+        [ -e "$iface_sys_path/carrier" ] && [ "$(< "$iface_sys_path"/carrier)" = 1 ] && return 0
         sleep 0.1
         cnt=$((cnt + 1))
     done

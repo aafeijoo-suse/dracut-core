@@ -65,7 +65,7 @@ cmdline() {
 
 # called by dracut
 install() {
-    inst_multiple cat expr
+    inst_multiple expr
     inst_multiple -o mdmon
     inst "$(command -v partx)" /sbin/partx
     inst "$(command -v mdadm)" /sbin/mdadm

@@ -1058,13 +1058,13 @@ show_memstats() {
             done < /proc/meminfo
             ;;
         mem)
-            cat /proc/meminfo
+            echo "$(< /proc/meminfo)"
             ;;
         slab)
-            cat /proc/slabinfo
+            echo "$(< /proc/slabinfo)"
             ;;
         iomem)
-            cat /proc/iomem
+            echo "$(< /proc/iomem)"
             ;;
     esac
 }

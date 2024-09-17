@@ -8,7 +8,10 @@ exec > /run/initramfs/rdsosreport.txt 2>&1
 
 PWFILTER='s/\(ftp:\/\/.*\):.*@/\1:*******@/g;s/\(cifs:\/\/.*\):.*@/\1:*******@/g;s/cifspass=[^ ]*/cifspass=*******/g;s/iscsi:.*@/iscsi:******@/g;s/rd.iscsi.password=[^ ]*/rd.iscsi.password=******/g;s/rd.iscsi.in.password=[^ ]*/rd.iscsi.in.password=******/g'
 set -x
-cat /lib/dracut/dracut-*
+for _i in /lib/dracut/dracut-*; do
+    [ -f "$_i" ] || break
+    echo "$(< "$_i")"
+done
 
 echo "/proc/cmdline"
 sed -e "$PWFILTER" /proc/cmdline
@@ -24,8 +27,8 @@ for _i in /etc/cmdline.d/*.conf; do
     sed -e "$PWFILTER" "$_i"
 done
 
-cat /proc/self/mountinfo
-cat /proc/mounts
+echo "$(< /proc/self/mountinfo)"
+echo "$(< /proc/mounts)"
 
 blkid
 blkid -o udev
@@ -46,7 +49,7 @@ fi
 
 command -v dmsetup > /dev/null 2> /dev/null && dmsetup ls --tree
 
-cat /proc/mdstat
+echo "$(< /proc/mdstat)"
 
 command -v ip > /dev/null 2> /dev/null && ip addr
 

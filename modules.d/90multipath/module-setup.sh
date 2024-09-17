@@ -3,7 +3,7 @@
 is_mpath() {
     local _dev=$1
     [ -e /sys/dev/block/"$_dev"/dm/uuid ] || return 1
-    [[ $(cat /sys/dev/block/"$_dev"/dm/uuid) =~ mpath- ]] && return 0
+    [[ $(< /sys/dev/block/"$_dev"/dm/uuid) =~ mpath- ]] && return 0
     return 1
 }
 

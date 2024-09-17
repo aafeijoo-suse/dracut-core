@@ -12,7 +12,7 @@ _remove_dm() {
     # multipath devices might have MD devices on top,
     # which are removed after this script. So do not
     # remove those to avoid spurious errors
-    case $(cat /sys/block/"${dev}"/dm/uuid) in
+    case $(< /sys/block/"${dev}"/dm/uuid) in
         mpath-*)
             return 0
             ;;

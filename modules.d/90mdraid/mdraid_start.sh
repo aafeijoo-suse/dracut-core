@@ -16,12 +16,12 @@ _md_start() {
     [ ! -r "$_path_s" ] && return 0
 
     # inactive ?
-    [ "$(cat "$_path_s")" != "inactive" ] && return 0
+    [ "$(< "$_path_s")" != "inactive" ] && return 0
 
     mdadm -R "${_md}" 2>&1 | vinfo
 
     # still inactive ?
-    [ "$(cat "$_path_s")" = "inactive" ] && return 0
+    [ "$(< "$_path_s")" = "inactive" ] && return 0
 
     _path_d="${_path_s%/*}/degraded"
     [ ! -r "$_path_d" ] && return 0

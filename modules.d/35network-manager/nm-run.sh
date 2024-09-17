@@ -3,7 +3,7 @@
 type source_hook > /dev/null 2>&1 || . /lib/dracut-lib.sh
 
 if [ -s /run/NetworkManager/initrd/hostname ]; then
-    cat /run/NetworkManager/initrd/hostname > /proc/sys/kernel/hostname
+    echo "$(< /run/NetworkManager/initrd/hostname)" > /proc/sys/kernel/hostname
 fi
 
 kf_get_string() {
@@ -43,7 +43,7 @@ dhcpopts_create() {
 
 for _i in /sys/class/net/*; do
     [ -d "$_i" ] || continue
-    state="/run/NetworkManager/devices/$(cat "$_i"/ifindex)"
+    state="/run/NetworkManager/devices/$(< "$_i"/ifindex)"
     grep -q '^connection-uuid=' "$state" 2> /dev/null || continue
     ifname="${_i##*/}"
     dhcpopts_create "$state" > /tmp/dhclient."$ifname".dhcpopts
