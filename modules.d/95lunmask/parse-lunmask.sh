@@ -25,8 +25,8 @@ EOF
 
 for lunmask_arg in $(getargs rd.lunmask); do
     (
-        local OLDIFS="$IFS"
-        local IFS=","
+        OLDIFS="$IFS"
+        IFS=","
         # shellcheck disable=SC2086
         set $lunmask_arg
         IFS="$OLDIFS"
