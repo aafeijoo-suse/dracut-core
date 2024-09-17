@@ -12,9 +12,6 @@
 # routing,dns,dhcp-options,etc.
 #
 
-# we really need to use `expr substr` with dash
-# shellcheck disable=SC2003 disable=SC2308
-
 command -v getarg > /dev/null || . /lib/dracut-lib.sh
 
 if [ -n "$netroot" ] && [ -z "$(getarg ip=)" ] && [ -z "$(getarg BOOTIF=)" ]; then
@@ -125,12 +122,12 @@ for p in $(getargs ip=); do
         # shellcheck disable=SC2003
         printf -- "ifname=%s:%s:%s:%s:%s:%s:%s\n" \
             "$dev" \
-            "$(expr substr "$dev" 3 2)" \
-            "$(expr substr "$dev" 5 2)" \
-            "$(expr substr "$dev" 7 2)" \
-            "$(expr substr "$dev" 9 2)" \
-            "$(expr substr "$dev" 11 2)" \
-            "$(expr substr "$dev" 13 2)" \
+            "${dev:2:2}" \
+            "${dev:4:2}" \
+            "${dev:6:2}" \
+            "${dev:8:2}" \
+            "${dev:10:2}" \
+            "${dev:12:2}" \
             >> /etc/cmdline.d/80-enx.conf
         setcmdline
     fi

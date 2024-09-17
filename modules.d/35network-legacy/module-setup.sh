@@ -2,7 +2,7 @@
 
 # called by dracut
 check() {
-    require_binaries -s ip sed awk grep pgrep tr expr || return 1
+    require_binaries -s ip sed awk grep pgrep tr || return 1
 
     require_any_binary -s arping arping2 wicked || return 1
     require_any_binary -s dhclient wicked || return 1
@@ -32,7 +32,7 @@ install() {
         [[ $hostonly ]] && inst_multiple -H -o "${systemdnetworkconfdir}/*.link"
     fi
 
-    inst_multiple ip sed awk grep pgrep tr expr
+    inst_multiple ip sed awk grep pgrep tr
     inst -o dhclient
 
     inst_multiple -o arping arping2

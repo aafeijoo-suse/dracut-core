@@ -5,7 +5,7 @@ check() {
     local dev holder
 
     # No mdadm?  No mdraid support.
-    require_binaries mdadm expr || return 1
+    require_binaries mdadm || return 1
 
     [[ $hostonly ]] || [[ $mount_needs ]] && {
         for dev in "${!host_fs_types[@]}"; do
@@ -65,7 +65,6 @@ cmdline() {
 
 # called by dracut
 install() {
-    inst_multiple expr
     inst_multiple -o mdmon
     inst "$(command -v partx)" /sbin/partx
     inst "$(command -v mdadm)" /sbin/mdadm
