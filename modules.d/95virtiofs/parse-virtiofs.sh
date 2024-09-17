@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Accepted formats:
 # 	rootfstype=virtiofs root=<tag>
 # 	root=virtiofs:<tag>

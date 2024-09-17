@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Argument $1 is "settled", "online", or "timeout", indicating
 # the queue from which the script is called.
 # In the "timeout" case, try everything.

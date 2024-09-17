@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 echo 'Generating "/run/initramfs/rdsosreport.txt"'
 

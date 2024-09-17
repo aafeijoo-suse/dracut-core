@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if dcssblk_arg=$(getarg rd.dcssblk=); then
     info "Loading dcssblk segments=$dcssblk_arg"

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # url-lib.sh - functions for handling URLs (file fetching etc.)
 #
 # Authors:

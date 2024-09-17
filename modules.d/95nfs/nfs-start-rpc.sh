@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if load_fstype sunrpc rpc_pipefs; then
     [ ! -d /var/lib/nfs/rpc_pipefs/nfs ] \

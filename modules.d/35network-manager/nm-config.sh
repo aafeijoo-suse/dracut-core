@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 type nm_generate_connections > /dev/null 2>&1 || . /lib/nm-lib.sh
 

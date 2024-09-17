@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 export DRACUT_SYSTEMD=1
 if [ -f /dracut-state.sh ]; then

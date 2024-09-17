@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Preferred format:
 #       root=iscsi:[<servername>]:[<protocol>]:[<port>]:[<LUN>]:<targetname>

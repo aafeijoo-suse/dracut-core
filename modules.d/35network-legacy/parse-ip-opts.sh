@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Format:
 #       ip=[dhcp|on|any|single-dhcp]

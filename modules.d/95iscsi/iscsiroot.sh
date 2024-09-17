@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # This implementation is incomplete: Discovery mode is not implemented and
 # the argument handling doesn't follow currently agreed formats. This is mainly

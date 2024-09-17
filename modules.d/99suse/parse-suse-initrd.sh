@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # convert openSUSE / SLE initrd command lines into dracut ones
 # linuxrc=trace shell=1 sysrq=yes sysrq=1-9 journaldev mduuid
 # TargetAddress TargetPort TargetName

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 type ismounted > /dev/null 2>&1 || . /lib/dracut-lib.sh
 

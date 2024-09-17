@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # cifs_to_var CIFSROOT
 # use CIFSROOT to set $server, $path, and $options.

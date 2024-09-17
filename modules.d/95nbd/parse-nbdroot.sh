@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Preferred format:
 #       root=nbd:srv:port/exportname[:fstype[:rootflags[:nbdopts]]]

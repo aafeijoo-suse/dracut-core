@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ -e /etc/lvm/lvm.conf ] && ! getargbool 1 rd.lvm.conf; then
     rm -f -- /etc/lvm/lvm.conf

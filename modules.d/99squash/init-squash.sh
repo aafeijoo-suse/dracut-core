@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 PATH=/bin:/sbin
 
 [ -e /proc/self/mounts ] \

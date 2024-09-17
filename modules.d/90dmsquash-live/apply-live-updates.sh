@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ -h /dev/root ] && [ -d /run/initramfs/live/updates -o -d /updates ]; then
     info "Applying updates to live image..."

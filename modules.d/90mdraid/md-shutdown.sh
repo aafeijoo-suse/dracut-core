@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 _do_md_shutdown() {
     local ret

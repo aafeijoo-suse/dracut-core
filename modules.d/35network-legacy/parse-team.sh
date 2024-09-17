@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Format:
 #       team=<teammaster>:<teamslaves>[:<teamrunner>]

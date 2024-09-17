@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # live images are specified with
 # root=live:backingdev
 

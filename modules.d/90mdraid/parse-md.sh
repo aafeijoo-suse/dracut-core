@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # we really need to use `expr substr` with dash
 # shellcheck disable=SC2003 disable=SC2308
 

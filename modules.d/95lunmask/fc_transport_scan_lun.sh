@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # fc_transport_lun_scan
 #

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if ! getargbool 1 rd.dm || getarg "rd.dm=0"; then
     info "rd.dm=0: removing DM RAID activation"

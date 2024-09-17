@@ -145,7 +145,7 @@ install() {
     if ldd "$_systemdbinary" | grep -qw libasan; then
         local _wrapper="$systemdutildir"/systemd-asan-wrapper
         cat > "$initdir"/"$_wrapper" << EOF
-#!/bin/sh
+#!/bin/bash
 mount -t proc -o nosuid,nodev,noexec proc /proc
 exec $_systemdbinary
 EOF

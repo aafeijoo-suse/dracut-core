@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 getargbool 0 rd.neednet && NEEDNET=1
 

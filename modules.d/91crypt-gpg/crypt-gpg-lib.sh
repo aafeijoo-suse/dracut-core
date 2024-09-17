@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 command -v ask_for_password > /dev/null || . /lib/dracut-crypt-lib.sh
 

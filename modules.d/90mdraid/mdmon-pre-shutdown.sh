@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 _do_mdmon_takeover() {
     local ret

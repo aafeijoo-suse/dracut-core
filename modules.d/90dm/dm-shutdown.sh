@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 _remove_dm() {
     local dev="$1"

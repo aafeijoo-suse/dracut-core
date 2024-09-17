@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # live net images - just like live images, but specified like:
 # root=live:[url-to-backing-file]
 

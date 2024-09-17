@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # root=cifs://[user:pass@]<server>/<folder>
 #

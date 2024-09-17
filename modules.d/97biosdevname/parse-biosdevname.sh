@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if ! getargbool 1 biosdevname; then
     info "biosdevname=0: removing biosdevname network renaming"

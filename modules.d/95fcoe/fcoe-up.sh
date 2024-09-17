@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # We get called like this:
 # fcoe-up <network-device> <dcb|nodcb> <fabric|vn2vn>

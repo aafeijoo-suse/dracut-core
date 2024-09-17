@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # sas_transport_lun_scan
 #

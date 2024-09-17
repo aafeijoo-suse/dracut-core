@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # This script is sourced, so root should be set. But let's be paranoid
 [ -z "$root" ] && root=$(getarg root=)
