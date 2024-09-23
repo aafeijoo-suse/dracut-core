@@ -1062,16 +1062,15 @@ label_uuid_to_dev() {
 # $BOOT is the primary place to put boot menu entry resources into
 # see https://uapi-group.org/specifications/specs/boot_loader_specification
 get_dollar_boot() {
-    local _root_arg
     local _esp
     local _xbootldr
     local _dollar_boot
 
     if type -P bootctl &> /dev/null; then
         # shellcheck disable=SC2155 disable=SC2068
-        _esp=$(bootctl ${_root_arg[@]} -p 2> /dev/null)
+        _esp=$(bootctl -p 2> /dev/null)
         # shellcheck disable=SC2155 disable=SC2068
-        _xbootldr=$(bootctl ${_root_arg[@]} -x 2> /dev/null)
+        _xbootldr=$(bootctl -x 2> /dev/null)
         [[ $_xbootldr == "$_esp" ]] && unset _xbootldr
         _dollar_boot=${_xbootldr:-$_esp}
     else
