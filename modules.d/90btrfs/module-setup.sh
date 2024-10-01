@@ -32,7 +32,6 @@ cmdline() {
 # called by dracut
 installkernel() {
     instmods btrfs
-    printf "%s\n" "$(cmdline)" > "${initdir}/etc/cmdline.d/00-btrfs.conf"
 }
 
 # called by dracut
@@ -40,4 +39,8 @@ install() {
     inst_rules 64-btrfs-dm.rules
     inst_multiple -o btrfsck
     inst "$(command -v btrfs)" /sbin/btrfs
+
+    if [[ $hostonly_cmdline == "yes" ]]; then
+        printf "%s\n" "$(cmdline)" > "${initdir}/etc/cmdline.d/00-btrfs.conf"
+    fi
 }
