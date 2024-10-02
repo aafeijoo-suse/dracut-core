@@ -16,16 +16,17 @@
 #
 
 %define dracutlibdir %{_prefix}/lib/dracut
+%define dracutversion 1000
 
-Name:           dracut
-Version:        061
+Name:           dracut-core
+Version:        0.0.1~devel
 Release:        0
 Summary:        Event driven initramfs infrastructure
 License:        GPLv2+ and LGPLv2+ and GPLv2
 Group:          System/Base
 URL:            https://github.com/aafeijoo-suse/dracut-core
-Source0:        dracut-%{version}.tar.xz
-Source1:        dracut-rpmlintrc
+Source0:        dracut-core-%{version}.tar.xz
+Source1:        dracut-core-rpmlintrc
 BuildRequires:  asciidoc
 BuildRequires:  bash
 BuildRequires:  docbook-xsl-stylesheets
@@ -55,6 +56,8 @@ Requires:       util-linux >= 2.21
 Requires:       util-linux-systemd >= 2.36.2
 Recommends:     xz
 Requires:       zstd
+Provides:       dracut = %{dracutversion}
+Conflicts:      dracut
 # We use 'btrfs fi usage' that was not present before
 Conflicts:      btrfsprogs < 3.18
 # suse-module-tools >= 15.4.7 is prepared for the removal of mkinitrd-suse.sh
@@ -73,6 +76,7 @@ Summary:        dracut modules to build a dracut initramfs with an integrity che
 Group:          System/Base
 Requires:       %{name} = %{version}-%{release}
 Requires:       libkcapi-tools
+Provides:       dracut-fips = %{dracutversion}
 
 %description fips
 This package requires everything which is needed to build an
@@ -87,6 +91,7 @@ Group:          System/Base
 Requires:       %{name} = %{version}-%{release}
 Requires:       evmctl
 Requires:       keyutils
+Provides:       dracut-ima = %{dracutversion}
 
 %description ima
 This package requires everything which is needed to build an
@@ -103,6 +108,7 @@ Requires:       (iputils or arping2 or wicked or NetworkManager)
 # NetworkManager >= 1.20 has an internal DHCP client
 Requires:       (dhcp-client if NetworkManager < 1.20)
 Requires:       (jq if nvme-cli)
+Provides:       dracut-network = %{dracutversion}
 
 %description network
 This package requires everything which is needed to build an initramfs with
@@ -120,6 +126,7 @@ Requires:       gzip
 Requires:       ntfs-3g
 Requires:       parted
 Requires:       tar
+Provides:       dracut-live = %{dracutversion}
 
 %description live
 This package requires everything which is needed to build an initramfs with

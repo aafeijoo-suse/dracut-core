@@ -16,16 +16,17 @@
 #
 
 %define dracutlibdir %{_prefix}/lib/dracut
+%define dracutversion 1000
 
-Name:           dracut
-Version:        061
+Name:           dracut-core
+Version:        0.0.1~devel
 Release:        0
 Summary:        Event driven initramfs infrastructure
 License:        GPLv2+ and LGPLv2+ and GPLv2
 Group:          System/Base
 URL:            https://github.com/aafeijoo-suse/dracut-core
-Source0:        dracut-%{version}.tar.xz
-Source1:        dracut-rpmlintrc
+Source0:        dracut-core-%{version}.tar.xz
+Source1:        dracut-core-rpmlintrc
 BuildRequires:  asciidoc
 BuildRequires:  bash
 BuildRequires:  docbook-dtds
@@ -56,6 +57,8 @@ Requires:       systemd-udev >= 249
 Recommends:     (tpm2.0-tools if tpm2-tss)
 Requires:       util-linux >= 2.21
 Requires:       xz
+Provides:       dracut = %{dracutversion}
+Conflicts:      dracut
 
 %description
 dracut contains tools to create a bootable initramfs for Linux kernels >= 2.6.
@@ -69,6 +72,7 @@ Summary:        dracut modules to build a dracut initramfs with an integrity che
 Group:          System/Base
 Requires:       %{name} = %{version}-%{release}
 Requires:       libkcapi-hmaccalc
+Provides:       dracut-fips = %{dracutversion}
 
 %description fips
 This package requires everything which is needed to build an
@@ -83,6 +87,7 @@ Group:          System/Base
 Requires:       %{name} = %{version}-%{release}
 Requires:       evmctl
 Requires:       keyutils
+Provides:       dracut-ima = %{dracutversion}
 
 %description ima
 This package requires everything which is needed to build an
@@ -99,6 +104,7 @@ Requires:       NetworkManager
 # NetworkManager >= 1.20 has an internal DHCP client
 Requires:       (dhcp-client if NetworkManager < 1.20)
 Requires:       (jq if nvme-cli)
+Provides:       dracut-network = %{dracutversion}
 
 %description network
 This package requires everything which is needed to build an initramfs with
@@ -115,6 +121,7 @@ Requires:       fuse
 Requires:       ntfs-3g
 Requires:       parted
 Requires:       tar
+Provides:       dracut-live = %{dracutversion}
 
 %description live
 This package requires everything which is needed to build an initramfs with
