@@ -286,7 +286,7 @@ _long_version() {
         # shellcheck source=./dracut-version.sh
         . "$dracutbasedir"/dracut-version.sh
     fi
-    echo "dracut $DRACUT_VERSION"
+    echo "dracut-core $DRACUT_VERSION"
 }
 
 _check_conf_file() {
