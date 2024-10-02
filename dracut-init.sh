@@ -365,12 +365,12 @@ dracut_instmods() {
 
     if $DRACUT_INSTALL \
         \
-        ${initdir:+-D "$initdir"} ${loginstall:+-L "$loginstall"} ${hostonly:+-H} ${check_supported:+--check-supported} ${omit_drivers:+-N "$omit_drivers"} ${srcmods:+--kerneldir "$srcmods"} -m "$@"; then
+        ${kerneldir:+-D "$kerneldir"} ${loginstall:+-L "$loginstall"} ${hostonly:+-H} ${check_supported:+--check-supported} ${omit_drivers:+-N "$omit_drivers"} ${srcmods:+--kerneldir "$srcmods"} -m "$@"; then
         return 0
     else
         _ret=$?
         if ((_silent == 0)); then
-            derror FAILED: "$DRACUT_INSTALL" ${initdir:+-D "$initdir"} ${loginstall:+-L "$loginstall"} ${hostonly:+-H} ${check_supported:+--check-supported} ${omit_drivers:+-N "$omit_drivers"} ${srcmods:+--kerneldir "$srcmods"} -m "$@"
+            derror FAILED: "$DRACUT_INSTALL" ${kerneldir:+-D "$kerneldir"} ${loginstall:+-L "$loginstall"} ${hostonly:+-H} ${check_supported:+--check-supported} ${omit_drivers:+-N "$omit_drivers"} ${srcmods:+--kerneldir "$srcmods"} -m "$@"
         fi
         return $_ret
     fi
@@ -970,12 +970,16 @@ for_each_module_dir() {
 
 dracut_kernel_post() {
     for _f in modules.builtin modules.builtin.alias modules.builtin.modinfo modules.order; do
-        [[ -e $srcmods/$_f ]] && inst_simple "$srcmods/$_f" "/lib/modules/$kernel/$_f"
+        if [[ -e $srcmods/$_f ]]; then
+            if ! $DRACUT_INSTALL ${kerneldir:+-D "$kerneldir"} ${loginstall:+-L "$loginstall"} "$srcmods/$_f" "/lib/modules/$kernel/$_f"; then
+                derror FAILED: "$DRACUT_INSTALL" ${kerneldir:+-D "$kerneldir"} ${loginstall:+-L "$loginstall"} "$srcmods/$_f" "/lib/modules/$kernel/$_f"
+            fi
+        fi
     done
 
     # generate module dependencies for the initrd
-    if [[ -d $initdir/lib/modules/$kernel ]] \
-        && ! depmod -a -b "$initdir" "$kernel"; then
+    if [[ -d $kerneldir/lib/modules/$kernel ]] \
+        && ! depmod -a -b "$kerneldir" "$kernel"; then
         dfatal "\"depmod -a $kernel\" failed."
         exit 1
     fi
@@ -1013,7 +1017,7 @@ instmods() {
     fi
 
     $DRACUT_INSTALL \
-        ${initdir:+-D "$initdir"} \
+        ${kerneldir:+-D "$kerneldir"} \
         \
         ${loginstall:+-L "$loginstall"} \
         ${hostonly:+-H} \
@@ -1028,7 +1032,7 @@ instmods() {
     if ((_ret != 0)) && [[ -z $_silent ]]; then
         derror "FAILED: " \
             "$DRACUT_INSTALL" \
-            ${initdir:+-D "$initdir"} \
+            ${kerneldir:+-D "$kerneldir"} \
             \
             ${loginstall:+-L "$loginstall"} \
             ${hostonly:+-H} \

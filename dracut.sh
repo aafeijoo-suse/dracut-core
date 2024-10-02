@@ -118,6 +118,9 @@ Creates initial ramdisk images for preloading modules
                          where to look for libraries.
   --kernel-only         Only install kernel drivers and firmware files.
   --no-kernel           Do not install kernel drivers and firmware files.
+  --split-kernel        Generate two initramfs files, one without kernel modules
+                         and other with kernel modules only. The second one will
+                         not be compressed if kernel modules are compressed.
   --print-cmdline       Print the kernel command line for the given disk layout.
   --early-microcode     Combine early microcode with ramdisk.
   --no-early-microcode  Do not combine early microcode with ramdisk.
@@ -367,6 +370,7 @@ _rearrange_params() {
             --long force \
             --long kernel-only \
             --long no-kernel \
+            --long split-kernel \
             --long print-cmdline \
             --long kernel-cmdline: \
             --long strip \
@@ -659,6 +663,9 @@ while :; do
         --no-kernel)
             kernel_only="no"
             no_kernel="yes"
+            ;;
+        --split-kernel)
+            split_kernel="yes"
             ;;
         --print-cmdline)
             print_cmdline="yes"
@@ -1102,6 +1109,12 @@ trap 'exit 1;' SIGINT
 
 readonly initdir="${DRACUT_TMPDIR}/initramfs"
 mkdir -p "$initdir"
+if [[ $split_kernel == yes ]]; then
+    readonly kerneldir="${DRACUT_TMPDIR}/initramfs-kernel"
+    mkdir -p "$kerneldir"
+else
+    readonly kerneldir="$initdir"
+fi
 
 # shellcheck disable=SC2154
 if [[ $early_microcode == yes ]] || { [[ $acpi_override == yes ]] && [[ -d $acpi_table_dir ]]; }; then
@@ -1223,6 +1236,18 @@ case $dracutmodules in
 esac
 
 abs_outfile=$(readlink -f "$outfile") && outfile="$abs_outfile"
+if [[ $split_kernel == yes ]]; then
+    outdir=${outfile%/*}
+    if ! strglobin "$outdir" "$kernel" && ! str_ends "$outfile" "$kernel"; then
+        outfile_name=${outfile##*/}
+        outfile_ext=${outfile_name##*.}
+        [[ "$outfile_name" == "$outfile_ext" ]] && unset outfile_ext
+        outfile_name=${outfile_name%.*}
+        outfile_kernel="${outdir}/${outfile_name}-kernel${outfile_ext:+.$outfile_ext}"
+    else
+        outfile_kernel="${outfile/${kernel}/${kernel}-kernel}"
+    fi
+fi
 
 # Helper function to set global variables
 # _set_global_var <pkg_config> <var> <value[:check_file]> [<value[:check_file]>] ...
@@ -1311,6 +1336,10 @@ if [[ ! $print_cmdline ]]; then
         dfatal "Will not override existing initramfs ($outfile) without --force"
         exit 1
     fi
+    if [[ $split_kernel == yes ]] && [[ -f $outfile_kernel && ! $force ]]; then
+        dfatal "Will not override existing initramfs ($outfile_kernel) without --force"
+        exit 1
+    fi
 
     outdir=${outfile%/*}
     [[ $outdir ]] || outdir="/"
@@ -1323,6 +1352,9 @@ if [[ ! $print_cmdline ]]; then
         exit 1
     elif [[ -f $outfile && ! -w $outfile ]]; then
         dfatal "No permission to write $outfile."
+        exit 1
+    elif [[ $split_kernel == yes && -f $outfile_kernel && ! -w $outfile_kernel ]]; then
+        dfatal "No permission to write $outfile_kernel."
         exit 1
     fi
 
@@ -1547,7 +1579,7 @@ done
 export initdir dracutbasedir \
     dracutmodules force_add_dracutmodules add_dracutmodules omit_dracutmodules \
     mods_to_load \
-    fw_dir drivers_dir debug no_kernel kernel_only \
+    fw_dir drivers_dir debug no_kernel kernel_only split_kernel \
     omit_drivers mdadmconf lvmconf root_devs \
     use_fstab fstab_lines libdirs fscks nofscks ro_mnt \
     stdloglvl sysloglvl fileloglvl kmsgloglvl logfile \
@@ -2042,7 +2074,7 @@ if [[ $do_strip == yes ]] && ! [[ $DRACUT_FIPS_MODE ]]; then
         | xargs -r -0 $strip_cmd "${strip_args[@]}" 2> /dev/null
 
     # strip kernel modules, but do not touch signed modules
-    find "$initdir" -type f -path '*/lib/modules/*.ko' -print0 \
+    find "$kerneldir" -type f -path '*/lib/modules/*.ko' -print0 \
         | while read -r -d $'\0' f || [ -n "$f" ]; do
             SIG=$(tail -c 28 "$f" | tr -d '\000')
             [[ $SIG == '~Module signature appended~' ]] || { printf "%s\000" "$f"; }
@@ -2204,6 +2236,41 @@ else
     exit 1
 fi
 
+if [[ $split_kernel == yes ]]; then
+    dinfo "*** Creating image file '$outfile_kernel' ***"
+
+    # do not compress this image if kernel modules are already compressed
+    if [[ "x$(find "/" -type f -path '*/lib/modules/*.ko.*' -print -quit 2> /dev/null)" != x ]]; then
+        compress="cat"
+    fi
+
+    if ! (
+        umask 077
+        cd "$kerneldir"
+        find . -print0 | sort -z \
+            | cpio ${CPIO_REPRODUCIBLE:+--reproducible} --null -H newc -o --quiet \
+            | $compress >> "${DRACUT_TMPDIR}/initramfs-kernel.img"
+    ); then
+        dfatal "Creation of $outfile_kernel failed"
+        exit 1
+    fi
+
+    # shellcheck disable=SC2154
+    if ((maxloglvl >= 5)) && ((verbosity_mod_l >= 0)); then
+        lsinitrd "${DRACUT_TMPDIR}/initramfs-kernel.img" | ddebug
+    fi
+
+    umask 077
+
+    if cp --reflink=auto "${DRACUT_TMPDIR}/initramfs-kernel.img" "$outfile_kernel"; then
+        dinfo "*** Creating initramfs image file '$outfile_kernel' done ***"
+    else
+        rm -f -- "$outfile_kernel"
+        dfatal "Creation of $outfile_kernel failed"
+        exit 1
+    fi
+fi
+
 # We sync/fsfreeze only if we're operating on a live booted system.
 # It's possible for e.g. `kernel` to be installed as an RPM BuildRequires or equivalent,
 # and there's no reason to sync, and *definitely* no reason to fsfreeze.
@@ -2213,6 +2280,13 @@ if [[ -d /run/systemd/system ]]; then
     if ! sync "$outfile" 2> /dev/null; then
         dinfo "sync operation on newly created initramfs $outfile failed"
         exit 1
+    fi
+
+    if [[ $split_kernel == yes ]]; then
+        if ! sync "$outfile_kernel" 2> /dev/null; then
+            dinfo "sync operation on newly created initramfs $outfile_kernel failed"
+            exit 1
+        fi
     fi
 
     # use fsfreeze only if we're not writing to /
