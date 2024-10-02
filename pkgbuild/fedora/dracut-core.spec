@@ -21,7 +21,7 @@
 Name:           dracut-core
 Version:        0.0.1~devel
 Release:        0
-Summary:        Event driven initramfs infrastructure
+Summary:        Event driven initramfs infrastructure (core)
 License:        GPLv2+ and LGPLv2+ and GPLv2
 Group:          System/Base
 URL:            https://github.com/aafeijoo-suse/dracut-core
