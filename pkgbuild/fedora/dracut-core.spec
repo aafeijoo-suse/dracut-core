@@ -222,7 +222,7 @@ ln -s %{dracutlibdir}/dracut-util %{buildroot}%{dracutlibdir}/dracut-getarg
 
 %files
 %license COPYING
-%doc README.md NEWS.md dracut.html
+%doc README.md dracut.html
 %doc docs/HACKING.md
 %{_bindir}/dracut
 %{_bindir}/lsinitrd
