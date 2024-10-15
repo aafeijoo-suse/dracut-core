@@ -31,9 +31,12 @@ installkernel() {
 # Install the required file(s) and directories for the module in the initramfs.
 install() {
 
-    inst_dir /var/lib/systemd/pstore
+    inst_simple "$moddir/initrd.conf" "$systemdutildir/pstore.conf.d/initrd.conf"
+
     inst_multiple -o \
         "$tmpfilesdir/systemd-pstore.conf" \
+        "$systemdutildir"/pstore.conf \
+        "$systemdutildir/pstore.conf.d/*.conf" \
         "$systemdutildir"/systemd-pstore \
         "$systemdsystemunitdir"/systemd-pstore.service \
         "$systemdsystemunitdir/systemd-pstore.service.d/*.conf"
