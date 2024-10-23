@@ -285,7 +285,6 @@ ln -s %{dracutlibdir}/dracut-util %{buildroot}%{dracutlibdir}/dracut-getarg
 %{dracutlibdir}/modules.d/01systemd-ldconfig
 %{dracutlibdir}/modules.d/01systemd-modules-load
 %{dracutlibdir}/modules.d/01systemd-pcrphase
-%{dracutlibdir}/modules.d/01systemd-pstore
 %{dracutlibdir}/modules.d/01systemd-repart
 %{dracutlibdir}/modules.d/01systemd-sysctl
 %{dracutlibdir}/modules.d/01systemd-sysext
