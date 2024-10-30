@@ -34,6 +34,7 @@ install() {
     [[ $hostonly ]] && grep '^root:' /etc/shadow >> "$initdir/etc/shadow"
 
     # install our scripts and hooks
+    inst_script "$moddir/initqueue.sh" "/sbin/initqueue"
     inst_script "$moddir/rdsosreport.sh" "/sbin/rdsosreport"
 
     [ -e "${initdir}/lib" ] || mkdir -m 0755 -p "${initdir}"/lib
