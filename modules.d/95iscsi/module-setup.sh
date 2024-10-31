@@ -185,18 +185,25 @@ cmdline() {
 
 # called by dracut
 install() {
-    inst_multiple -o iscsiuio
-    inst_libdir_file 'libgcc_s.so*'
-    inst_multiple umount iscsi-iname iscsiadm iscsid
-    inst_binary sort
 
     inst_multiple -o \
-        "$systemdsystemunitdir"/iscsid.socket \
+        "$systemdsystemunitdir"/iscsi.service \
+        "$systemdsystemunitdir"/iscsi-init.service \
         "$systemdsystemunitdir"/iscsid.service \
+        "$systemdsystemunitdir"/iscsid.socket \
         "$systemdsystemunitdir"/iscsiuio.service \
         "$systemdsystemunitdir"/iscsiuio.socket \
         "$systemdsystemunitdir"/sockets.target.wants/iscsid.socket \
-        "$systemdsystemunitdir"/sockets.target.wants/iscsiuio.socket
+        "$systemdsystemunitdir"/sockets.target.wants/iscsiuio.socket \
+        iscsi-iname iscsiadm iscsid iscsiuio
+
+    for i in \
+        iscsid.socket \
+        iscsiuio.socket; do
+        $SYSTEMCTL -q --root "$initdir" enable "$i"
+    done
+
+    inst_libdir_file 'libgcc_s.so*'
 
     if [[ $hostonly ]]; then
         local -a _filenames
@@ -218,25 +225,9 @@ install() {
     inst_hook cmdline 90 "$moddir/parse-iscsiroot.sh"
     inst "$moddir/iscsiroot.sh" "/sbin/iscsiroot"
 
-    inst_multiple -o \
-        "$systemdsystemunitdir"/iscsi.service \
-        "$systemdsystemunitdir"/iscsi-init.service \
-        "$systemdsystemunitdir"/iscsid.service \
-        "$systemdsystemunitdir"/iscsid.socket \
-        "$systemdsystemunitdir"/iscsiuio.service \
-        "$systemdsystemunitdir"/iscsiuio.socket \
-        iscsiadm iscsid
-
-    for i in \
-        iscsid.socket \
-        iscsiuio.socket; do
-        $SYSTEMCTL -q --root "$initdir" enable "$i"
-    done
-
     mkdir -p "${initdir}/$systemdsystemunitdir/iscsid.service.d"
     {
         echo "[Unit]"
-        echo "DefaultDependencies=no"
         echo "Conflicts=shutdown.target"
         echo "Before=shutdown.target"
     } > "${initdir}/$systemdsystemunitdir/iscsid.service.d/dracut.conf"
@@ -246,14 +237,12 @@ install() {
         echo "[Unit]"
         echo "DefaultDependencies=no"
         echo "Conflicts=shutdown.target"
-        echo "Before=shutdown.target sockets.target"
+        echo "Before=shutdown.target"
     } > "${initdir}/$systemdsystemunitdir/iscsid.socket.d/dracut.conf"
 
     mkdir -p "${initdir}/$systemdsystemunitdir/iscsiuio.service.d"
     {
         echo "[Unit]"
-        echo "DefaultDependencies=no"
-        echo "Conflicts=shutdown.target"
         echo "Before=shutdown.target"
     } > "${initdir}/$systemdsystemunitdir/iscsiuio.service.d/dracut.conf"
 
@@ -262,7 +251,7 @@ install() {
         echo "[Unit]"
         echo "DefaultDependencies=no"
         echo "Conflicts=shutdown.target"
-        echo "Before=shutdown.target sockets.target"
+        echo "Before=shutdown.target"
     } > "${initdir}/$systemdsystemunitdir/iscsiuio.socket.d/dracut.conf"
 
     # Fedora 34 iscsid requires iscsi-shutdown.service
