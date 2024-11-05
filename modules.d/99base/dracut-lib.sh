@@ -307,32 +307,6 @@ getargs() {
     return 1
 }
 
-# Prints value of given option.  If option is a flag and it's present,
-# it just returns 0.  Otherwise 1 is returned.
-# $1 = options separated by commas
-# $2 = option we are interested in
-#
-# Example:
-# $1 = cipher=aes-cbc-essiv:sha256,hash=sha256,verify
-# $2 = hash
-# Output:
-# sha256
-getoptcomma() {
-    local line=",$1,"
-    local opt="$2"
-    local tmp
-
-    case "${line}" in
-        *,${opt}=*,*)
-            tmp="${line#*,"${opt}"=}"
-            echo "${tmp%%,*}"
-            return 0
-            ;;
-        *,${opt},*) return 0 ;;
-    esac
-    return 1
-}
-
 # Splits given string 'str' with separator 'sep' into variables 'var1', 'var2',
 # 'varN'.  If number of fields is less than number of variables, remaining are
 # not set.  If number of fields is greater than number of variables, the last
@@ -466,22 +440,6 @@ check_quiet() {
     fi
 }
 
-check_occurances() {
-    # Count the number of times the character $ch occurs in $str
-    # Return 0 if the count matches the expected number, 1 otherwise
-    local str="$1"
-    local ch="$2"
-    local expected="$3"
-    local count=0
-
-    while [ "${str#*"$ch"}" != "${str}" ]; do
-        str="${str#*"$ch"}"
-        count=$((count + 1))
-    done
-
-    [ $count -eq "$expected" ]
-}
-
 incol2() {
     debug_off
     local check
@@ -512,58 +470,10 @@ udevproperty() {
     done
 }
 
-find_mount() {
-    local dev wanted_dev
-    wanted_dev="$(readlink -e -q "$1")"
-    while read -r dev _ || [ -n "$dev" ]; do
-        [ "$dev" = "$wanted_dev" ] && echo "$dev" && return 0
-    done < /proc/mounts
-    return 1
-}
-
 # usage: ismounted <mountpoint>
 # usage: ismounted /dev/<device>
-if command -v findmnt > /dev/null; then
-    ismounted() {
-        findmnt "$1" > /dev/null 2>&1
-    }
-else
-    ismounted() {
-        if [ -b "$1" ]; then
-            find_mount "$1" > /dev/null && return 0
-            return 1
-        fi
-
-        while read -r _ m _ || [ -n "$m" ]; do
-            [ "$m" = "$1" ] && return 0
-        done < /proc/mounts
-        return 1
-    }
-fi
-
-# Create udev rule match for a device with its device name, or the udev property
-# ID_FS_UUID or ID_FS_LABEL
-#
-# example:
-#   udevmatch LABEL=boot
-# prints:
-#   ENV{ID_FS_LABEL}="boot"
-#
-# TODO: symlinks
-udevmatch() {
-    case "$1" in
-        UUID=????????-????-????-????-???????????? | LABEL=* | PARTLABEL=* | PARTUUID=????????-????-????-????-????????????)
-            printf 'ENV{ID_FS_%s}=="%s"' "${1%%=*}" "${1#*=}"
-            ;;
-        UUID=*)
-            printf 'ENV{ID_FS_UUID}=="%s*"' "${1#*=}"
-            ;;
-        PARTUUID=*)
-            printf 'ENV{ID_FS_PARTUUID}=="%s*"' "${1#*=}"
-            ;;
-        /dev/?*) printf -- 'KERNEL=="%s"' "${1#/dev/}" ;;
-        *) return 255 ;;
-    esac
+ismounted() {
+    findmnt "$1" > /dev/null 2>&1
 }
 
 label_uuid_to_dev() {
@@ -796,34 +706,6 @@ inst_hook() {
     fi
 
     mv -f "/tmp/$$-${_job}.sh" "$hookdir/${_hookname}/${_job}.sh"
-}
-
-# inst_mount_hook <mountpoint> <prio> <name> <script>
-#
-# Install a mount hook with priority <prio>,
-# which executes <script> as soon as <mountpoint> is mounted.
-inst_mount_hook() {
-    local _prio="$2" _jobname="$3" _script="$4"
-    local _hookname
-    _hookname="mount-$(str_replace "$1" '/' '\\x2f')"
-    [ -d "$hookdir/${_hookname}" ] || mkdir -p "$hookdir/${_hookname}"
-    inst_hook --hook "$_hookname" --unique --name "${_prio}-${_jobname}" "$_script"
-}
-
-# wait_for_mount <mountpoint>
-#
-# Installs a initqueue-finished script,
-# which will cause the main loop only to exit,
-# if <mountpoint> is mounted.
-wait_for_mount() {
-    local _name
-    _name="$(str_replace "$1" '/' '\\x2f')"
-    printf '. /lib/dracut-lib.sh\nismounted "%s"\n' "$1" \
-        >> "$hookdir/initqueue/finished/ismounted-${_name}.sh"
-    {
-        printf 'ismounted "%s" || ' "$1"
-        printf 'warn "\"%s\" is not mounted"\n' "$1"
-    } >> "$hookdir/emergency/90-${_name}.sh"
 }
 
 killproc() {
