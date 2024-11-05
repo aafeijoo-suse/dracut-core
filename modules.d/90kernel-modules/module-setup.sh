@@ -148,5 +148,6 @@ install() {
     [[ -d /lib/modprobe.d ]] && inst_multiple -o "/lib/modprobe.d/*.conf"
     [[ -d /usr/lib/modprobe.d ]] && inst_multiple -o "/usr/lib/modprobe.d/*.conf"
     [[ $hostonly ]] && inst_multiple -H -o /etc/modprobe.d/*.conf /etc/modprobe.conf
+    inst_simple "$moddir/insmodpost.sh" /sbin/insmodpost.sh
     inst_multiple -o sysctl
 }
