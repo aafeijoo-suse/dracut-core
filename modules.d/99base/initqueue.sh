@@ -7,7 +7,7 @@
 
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
 
-type getarg > /dev/null 2>&1 || . /lib/dracut-lib.sh
+type warn > /dev/null 2>&1 || . /lib/dracut-lib.sh
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -56,7 +56,7 @@ shift
 
 [ -x "$exe" ] || exe=$(command -v "$exe")
 if [ -z "$exe" ]; then
-    echo "Invalid command"
+    warn "initqueue: invalid command '$exe'"
     exit 1
 fi
 
