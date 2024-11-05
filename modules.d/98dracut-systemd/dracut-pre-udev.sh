@@ -8,8 +8,7 @@ type getarg > /dev/null 2>&1 || . /lib/dracut-lib.sh
 source_conf /etc/conf.d
 
 make_trace_mem "hook pre-udev" '1:shortmem' '2+:mem' '3+:slab'
-# pre pivot scripts are sourced just before we doing cleanup and switch over
-# to the new root.
+# pre-udev scripts are sourced before systemd-udevd starts
 getargs 'rd.break=pre-udev' && emergency_shell -n pre-udev "Break before pre-udev"
 source_hook pre-udev
 

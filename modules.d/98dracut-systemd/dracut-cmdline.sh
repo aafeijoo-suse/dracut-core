@@ -48,7 +48,7 @@ export rflags
 export fstype
 
 make_trace_mem "hook cmdline" '1+:mem' '1+:iomem' '3+:slab'
-# run scriptlets to parse the command line
+# run scriptlets to parse the command line before pre-udev
 getargs 'rd.break=cmdline' && emergency_shell -n cmdline "Break before cmdline"
 source_hook cmdline
 
