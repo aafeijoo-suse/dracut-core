@@ -238,7 +238,7 @@ if ! getargbool 0 rd.nvmf.nonbft; then
     done
 fi
 
-initqueue --onetime modprobe --all -b -q nvme_tcp nvme_core nvme_fabrics
+/sbin/initqueue --onetime modprobe --all -b -q nvme_tcp nvme_core nvme_fabrics
 
 parse_nvmf_discover() {
     traddr="none"
