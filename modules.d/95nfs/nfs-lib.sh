@@ -1,7 +1,7 @@
 #!/bin/bash
 
 type getarg > /dev/null 2>&1 || . /lib/dracut-lib.sh
-. /lib/net-lib.sh
+type get_ip > /dev/null 2>&1 || . /lib/net-lib.sh
 
 # TODO: make these things not pollute the calling namespace
 
@@ -106,7 +106,7 @@ anaconda_nfsv6_to_var() {
 # fill in missing server/path from DHCP options.
 nfsroot_from_dhcp() {
     local f
-    for f in /tmp/net.$1.override /tmp/dhclient.$1.dhcpopts /tmp/leaseinfo.$1.dhcp.*; do
+    for f in /tmp/net."$1".override /tmp/dhclient."$1".dhcpopts /tmp/leaseinfo."$1".dhcp.*; do
         # shellcheck disable=SC1090
         [ -f "$f" ] && . "$f"
     done
@@ -151,7 +151,7 @@ mount_nfs() {
         # NFSv{2,3} doesn't support using locks as it requires a helper to
         # transfer the rpcbind state to the new root
         [ "$nfslock" = "lock" ] \
-            && warn "Locks unsupported on NFSv{2,3}, using nolock" 1>&2
+            && warn "nfs-lib: locks unsupported on NFSv{2,3}, using nolock" 1>&2
         options=$options,nolock
     fi
     mount -t "$nfs" -o"$options" "$server:$path" "$mntdir"

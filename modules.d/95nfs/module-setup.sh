@@ -21,7 +21,7 @@ get_nfs_type() {
 check() {
     # If our prerequisites are not met, fail anyways.
     require_any_binary rpcbind portmap || return 1
-    require_binaries rpc.statd mount.nfs mount.nfs4 umount sed chmod chown || return 1
+    require_binaries rpc.statd mount.nfs mount.nfs4 umount sed chmod chown grep || return 1
 
     [[ $hostonly ]] || [[ $mount_needs ]] && {
         [[ "$(get_nfs_type)" ]] && return 0
@@ -75,8 +75,8 @@ cmdline() {
 
 # called by dracut
 install() {
-    local _nsslibs
-    inst_multiple -o rpc.idmapd mount.nfs mount.nfs4 umount sed /etc/netconfig chmod chown "$tmpfilesdir/rpcbind.conf"
+    local _nsslibs _rpcuser
+    inst_multiple -o rpc.idmapd mount.nfs mount.nfs4 umount sed /etc/netconfig chmod chown grep "$tmpfilesdir/rpcbind.conf"
     inst_multiple -o /etc/idmapd.conf
     inst_multiple -o /etc/services /etc/nsswitch.conf /etc/rpc /etc/protocols
     inst_multiple -o /usr/etc/services /usr/etc/nsswitch.conf /usr/etc/rpc /usr/etc/protocols
@@ -124,8 +124,13 @@ install() {
 
     # Rather than copy the passwd file in, just set a user for rpcbind
     # We'll save the state and restart the daemon from the root anyway
-    grep -E '^nfsnobody:|^rpc:|^rpcuser:' /etc/passwd >> "$initdir/etc/passwd"
-    grep -E '^nogroup:|^rpc:|^nobody:' /etc/group >> "$initdir/etc/group"
+    _rpcuser=$(grep -m1 -E '^nfsnobody:|^rpc:|^rpcuser:' /etc/passwd)
+    if [[ -n "$_rpcuser" ]]; then
+        echo "$_rpcuser" >> "$initdir/etc/passwd"
+        # rpc user needs to be able to write to this directory to save the warmstart file
+        chown "${_rpcuser%%:*}": "$initdir/var/lib/rpcbind"
+        grep -E '^nogroup:|^rpc:|^nobody:' /etc/group >> "$initdir/etc/group"
+    fi
 
     dracut_need_initqueue
 }

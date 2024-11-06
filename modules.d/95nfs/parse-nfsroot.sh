@@ -24,7 +24,7 @@
 #
 
 type getarg > /dev/null 2>&1 || . /lib/dracut-lib.sh
-. /lib/nfs-lib.sh
+type nfsroot_to_var > /dev/null 2>&1 || . /lib/nfs-lib.sh
 
 # This script is sourced, so root should be set. But let's be paranoid
 [ -z "$root" ] && root=$(getarg root=)
@@ -39,7 +39,6 @@ if [ -n "$netroot" ]; then
         [ "$n" = "$netroot" ] && break
     done
     if [ "$n" = "$netroot" ]; then
-        #warn "Ignoring netroot argument for NFS"
         netroot=$root
     fi
 else
@@ -49,9 +48,9 @@ fi
 # LEGACY: nfsroot= is valid only if root=/dev/nfs
 if [ -n "$nfsroot" ]; then
     # @deprecated
-    warn "Argument nfsroot is deprecated and might be removed in a future release. See 'man dracut.kernel' for more information."
+    warn "nfs: argument nfsroot is deprecated and might be removed in a future release. See 'man dracut.kernel' for more information."
     if [ "$(getarg root=)" != "/dev/nfs" ]; then
-        die "Argument nfsroot only accepted for legacy root=/dev/nfs"
+        die "nfs: argument nfsroot only accepted for legacy root=/dev/nfs"
     fi
     netroot=nfs:$nfsroot
 fi
@@ -98,7 +97,7 @@ if nfsdomain=$(getarg rd.nfs.domain); then
 fi
 
 nfsroot_to_var "$netroot"
-[ "$path" = "error" ] && die "Argument nfsroot must contain a valid path!"
+[ "$path" = "error" ] && die "nfs: argument nfsroot must contain a valid path"
 
 # Set fstype, might help somewhere
 fstype=${nfs#/dev/}
@@ -122,9 +121,3 @@ root="$fstype"
 
 # shellcheck disable=SC2016
 echo '[ -e $NEWROOT/proc ]' > "$hookdir"/initqueue/finished/nfsroot.sh
-
-# rpc user needs to be able to write to this directory to save the warmstart
-# file
-mkdir -p /var/lib/rpcbind
-chown rpc:rpc /var/lib/rpcbind
-chmod 770 /var/lib/rpcbind

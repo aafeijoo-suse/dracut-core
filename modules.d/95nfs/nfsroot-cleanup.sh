@@ -22,8 +22,6 @@ if incol2 /proc/mounts /var/lib/nfs/rpc_pipefs; then
     if [ -d "$NEWROOT"/$rpcpipefspath ]; then
         # mount --move does not seem to work???
         mount --bind /var/lib/nfs/rpc_pipefs "$NEWROOT"/$rpcpipefspath
-        umount /var/lib/nfs/rpc_pipefs 2> /dev/null
-    else
-        umount /var/lib/nfs/rpc_pipefs 2> /dev/null
     fi
+    umount /var/lib/nfs/rpc_pipefs 2> /dev/null
 fi
