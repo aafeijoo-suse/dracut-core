@@ -45,7 +45,7 @@ handle_firmware() {
     # In these cases 'iscsiadm -m fw' will fail, but
     # the iSCSI sessions will still be present.
     if ! iscsiadm -m fw; then
-        warn "iscsiadm: Could not get list of targets from firmware."
+        warn "iscsiroot: iscsiadm could not get list of targets from firmware"
     else
         ifaces=$(
             set -- /sys/firmware/ibft/ethernet*
@@ -67,12 +67,12 @@ handle_firmware() {
         _res=$?
         if [ $_res -eq 7 ]; then
             # ISCSI_ERR_INVALID (7) => "-W" not supported
-            info "iscsiadm does not support no-wait firmware logins"
+            info "iscsiroot: iscsiadm does not support no-wait firmware logins"
             iscsiadm -m fw -l
             _res=$?
         fi
         if [ $_res -ne 0 ]; then
-            warn "iscsiadm: Log-in to iscsi target failed"
+            warn "iscsiroot: iscsiadm log-in to iscsi target failed"
         else
             need_shutdown
         fi
@@ -206,7 +206,7 @@ handle_netroot() {
             echo "$target"
         done
     })
-    [ -z "$targets" ] && warn "Target discovery to $iscsi_target_ip:${iscsi_target_port:+$iscsi_target_port} failed with status $?" && return 1
+    [ -z "$targets" ] && warn "iscsiroot: target discovery to $iscsi_target_ip:${iscsi_target_port:+$iscsi_target_port} failed with status $?" && return 1
 
     found=
     for target in $targets; do
@@ -241,7 +241,7 @@ handle_netroot() {
     if [ "$netif" = "timeout" ]; then
         iscsiadm -m node -L onboot || :
     elif [ "$found" != yes ]; then
-        warn "iSCSI target \"$iscsi_target_name\" not found on portal $iscsi_target_ip:$iscsi_target_port"
+        warn "iscsiroot: target \"$iscsi_target_name\" not found on portal $iscsi_target_ip:$iscsi_target_port"
         return 1
     fi
     : > "$hookdir"/initqueue/work

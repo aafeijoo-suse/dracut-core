@@ -7,6 +7,9 @@
 # root= takes precedence over netroot= if root=iscsi[...]
 #
 
+type getarg > /dev/null 2>&1 || . /lib/dracut-lib.sh
+type write_fs_tab > /dev/null 2>&1 || . /lib/fs-lib.sh
+
 # This script is sourced, so root should be set. But let's be paranoid
 [ -z "$root" ] && root=$(getarg root=)
 if [ -z "$netroot" ]; then
@@ -25,12 +28,10 @@ fi
 
 [ -z "$iscsi_firmware" ] && getargbool 0 rd.iscsi.firmware && iscsi_firmware="1"
 
-type write_fs_tab > /dev/null 2>&1 || . /lib/fs-lib.sh
-
 # Root takes precedence over netroot
 if [ "${root%%:*}" = "iscsi" ]; then
     if [ -n "$netroot" ]; then
-        echo "Warning: root takes precedence over netroot. Ignoring netroot"
+        warn "iscsi: root takes precedence over netroot, ignoring netroot"
     fi
     netroot=$root
     # if root is not specified try to mount the whole iSCSI LUN
