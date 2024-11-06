@@ -70,9 +70,9 @@ if [ -n "$iscsi_firmware" ]; then
     /sbin/initqueue --unique --onetime --settled /sbin/iscsiroot online "iscsi:" "'$NEWROOT'"
 fi
 
-# ISCSI actually supported?
+# iSCSI actually supported?
 if ! [ -e /sys/module/iscsi_tcp ]; then
-    modprobe -b -q iscsi_tcp || die "iscsiroot requested but kernel/initrd does not support iscsi"
+    modprobe -b -q iscsi_tcp || die "iscsi: iscsiroot requested but kernel/initrd does not support iscsi"
 fi
 
 modprobe --all -b -q qla4xxx cxgb3i cxgb4i bnx2i be2iscsi
