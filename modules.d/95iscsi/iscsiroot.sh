@@ -93,6 +93,7 @@ handle_netroot() {
     local iscsi_param param
     local p found
     local login_retry_max_seen=
+    local _res
 
     # override conf settings by command line options
     arg=$(getarg rd.iscsi.initiator)
@@ -201,12 +202,14 @@ handle_netroot() {
     if strglobin "$iscsi_target_ip" '*:*:*' && ! strglobin "$iscsi_target_ip" '['; then
         iscsi_target_ip="[$iscsi_target_ip]"
     fi
-    targets=$(iscsiadm -m discovery -t st -p "$iscsi_target_ip":${iscsi_target_port:+$iscsi_target_port} | {
+    targets=$(iscsiadm -m discovery -t st -p "$iscsi_target_ip":${iscsi_target_port:+$iscsi_target_port})
+    _res=$?
+    targets=$(echo -n "$targets" | {
         while read -r _ target _ || [ -n "$target" ]; do
             echo "$target"
         done
     })
-    [ -z "$targets" ] && warn "iscsiroot: target discovery to $iscsi_target_ip:${iscsi_target_port:+$iscsi_target_port} failed with status $?" && return 1
+    [ -z "$targets" ] && warn "iscsiroot: iscsiadm target discovery to $iscsi_target_ip:${iscsi_target_port:+$iscsi_target_port} failed with status $_res" && return 1
 
     found=
     for target in $targets; do
