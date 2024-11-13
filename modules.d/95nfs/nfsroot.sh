@@ -1,7 +1,7 @@
 #!/bin/bash
 
 type getarg > /dev/null 2>&1 || . /lib/dracut-lib.sh
-. /lib/nfs-lib.sh
+type mount_nfs > /dev/null 2>&1 || . /lib/nfs-lib.sh
 
 [ "$#" = 3 ] || exit 1
 
