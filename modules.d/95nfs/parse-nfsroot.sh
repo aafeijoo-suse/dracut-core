@@ -65,10 +65,6 @@ case "$netroot" in
         fi
         return
         ;;
-    # LEGACY: root=<server-ip>:/<path
-    [0-9]*:/* | [0-9]*\.[0-9]*\.[0-9]*[!:] | /*)
-        netroot=nfs:$netroot
-        ;;
 esac
 
 # Continue if nfs
@@ -98,18 +94,13 @@ fi
 
 nfsroot_to_var "$netroot"
 [ "$path" = "error" ] && die "nfs: argument nfsroot must contain a valid path"
+[ -z "$server" ] && die "nfs: argument nfsroot must specify a server"
 
 # Set fstype, might help somewhere
 fstype=${nfs#/dev/}
 
 # Rewrite root so we don't have to parse this uglyness later on again
 netroot="$fstype:$server:$path:$options"
-
-# If we don't have a server, we need dhcp
-if [ -z "$server" ]; then
-    # shellcheck disable=SC2034
-    DHCPORSERVER="1"
-fi
 
 # Done, all good!
 # shellcheck disable=SC2034
