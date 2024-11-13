@@ -78,11 +78,11 @@ munge_nfs_options() {
     options=$nfsrw${flags:+,$flags}
 }
 
-# mount_nfs NFSROOT MNTDIR [NETIF]
+# mount_nfs NFSROOT MNTDIR
 mount_nfs() {
-    local nfsroot="$1" mntdir="$2" netif="$3"
+    local nfsroot="$1" mntdir="$2"
     local nfs="" server="" path="" options=""
-    nfs_to_var "$nfsroot" "$netif"
+    nfs_to_var "$nfsroot"
     munge_nfs_options
     if [ "$nfs" = "nfs4" ]; then
         options=$options${nfslock:+,$nfslock}

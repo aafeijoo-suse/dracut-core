@@ -5,16 +5,14 @@ type mount_nfs > /dev/null 2>&1 || . /lib/nfs-lib.sh
 
 [ "$#" = 3 ] || exit 1
 
-# root is in the form root=nfs[4]:[server:]path[:options], either from
-# cmdline or dhcp root-path
-netif="$1"
+# root is in the form root=nfs[4]:[server:]path[:options]
 root="$2"
 NEWROOT="$3"
 
-nfs_to_var "$root" "$netif"
-[ -z "$server" ] && die "Required parameter 'server' is missing"
+nfs_to_var "$root"
+[ -z "$server" ] && die "nfsroot: required parameter 'server' is missing"
 
-mount_nfs "$root" "$NEWROOT" "$netif" && {
+mount_nfs "$root" "$NEWROOT" && {
     [ -e /dev/root ] || ln -s null /dev/root
     [ -e /dev/nfs ] || ln -s null /dev/nfs
 }

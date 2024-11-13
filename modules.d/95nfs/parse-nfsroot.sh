@@ -3,21 +3,8 @@
 # Preferred format:
 #       root=nfs[4]:[server:]path[:options]
 #
-# This syntax can come from DHCP root-path as well.
-#
 # Legacy format:
 #       root=/dev/nfs nfsroot=[server:]path[,options]
-#
-# In Legacy root=/dev/nfs mode, if the 'nfsroot' parameter is not given
-# on the command line or is empty, the dhcp root-path is used as
-# [server:]path[:options] or the default "/tftpboot/%s" will be used.
-#
-# If server is unspecified it will be pulled from one of the following
-# sources, in order:
-#       static ip= option on kernel command line
-#       DHCP next-server option
-#       DHCP server-id option
-#       DHCP root-path option
 #
 # NFSv4 is only used if explicitly requested with nfs4: prefix, otherwise
 # NFSv3 is used.
@@ -94,7 +81,7 @@ fi
 
 nfsroot_to_var "$netroot"
 [ "$path" = "error" ] && die "nfs: argument nfsroot must contain a valid path"
-[ -z "$server" ] && die "nfs: argument nfsroot must specify a server"
+[ -z "$server" ] && die "nfs: required parameter 'server' is missing"
 
 # Set fstype, might help somewhere
 fstype=${nfs#/dev/}
