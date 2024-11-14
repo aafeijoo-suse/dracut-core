@@ -83,6 +83,10 @@ mount_nfs() {
     local nfsroot="$1" mntdir="$2"
     local nfs="" server="" path="" options=""
     nfs_to_var "$nfsroot"
+    if [ -z "$server" ]; then
+        warn "mount_nfs: missing required parameter 'server'"
+        return 1
+    fi
     munge_nfs_options
     if [ "$nfs" = "nfs4" ]; then
         options=$options${nfslock:+,$nfslock}

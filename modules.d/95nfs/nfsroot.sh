@@ -9,13 +9,12 @@ type mount_nfs > /dev/null 2>&1 || . /lib/nfs-lib.sh
 root="$2"
 NEWROOT="$3"
 
-nfs_to_var "$root"
-[ -z "$server" ] && die "nfsroot: required parameter 'server' is missing"
-
-mount_nfs "$root" "$NEWROOT" && {
+if mount_nfs "$root" "$NEWROOT"; then
     [ -e /dev/root ] || ln -s null /dev/root
     [ -e /dev/nfs ] || ln -s null /dev/nfs
-}
+else
+    die "nfsroot: failed to mount NFS"
+fi
 
 [ -f "$NEWROOT"/etc/fstab ] && cat "$NEWROOT"/etc/fstab > /dev/null
 
