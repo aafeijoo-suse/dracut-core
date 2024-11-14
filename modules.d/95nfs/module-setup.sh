@@ -19,9 +19,7 @@ get_nfs_type() {
 
 # called by dracut
 check() {
-    # If our prerequisites are not met, fail anyways.
-    require_any_binary rpcbind portmap || return 1
-    require_binaries rpc.statd mount.nfs mount.nfs4 umount sed chmod chown grep || return 1
+    require_binaries rpcbind rpc.statd mount.nfs mount.nfs4 umount sed chmod chown grep || return 1
 
     [[ $hostonly ]] || [[ $mount_needs ]] && {
         [[ "$(get_nfs_type)" ]] && return 0
@@ -113,7 +111,7 @@ install() {
 
     # For strict hostonly, only install rpcbind for NFS < 4
     if [[ $hostonly_mode != "strict" ]] || [[ "$(get_nfs_type)" != "nfs4" ]]; then
-        inst_multiple -o portmap rpcbind rpc.statd
+        inst_multiple rpcbind rpc.statd
     fi
 
     inst "$moddir/nfs-lib.sh" "/lib/nfs-lib.sh"

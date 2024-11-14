@@ -8,7 +8,6 @@ if load_fstype sunrpc rpc_pipefs; then
 
     # Start rpcbind or rpcbind
     # FIXME occasionally saw 'rpcbind: fork failed: No such device' -- why?
-    command -v portmap > /dev/null && [ -z "$(pidof portmap)" ] && portmap
     if command -v rpcbind > /dev/null && [ -z "$(pidof rpcbind)" ]; then
         mkdir -p /run/rpcbind
         _rpcuser=$(grep -m1 -E '^nfsnobody:|^rpc:|^rpcuser:' /etc/passwd)
