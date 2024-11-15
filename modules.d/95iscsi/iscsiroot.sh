@@ -86,7 +86,7 @@ handle_firmware() {
 
 handle_netroot() {
     local iscsi_initiator iscsi_target_name iscsi_target_ip iscsi_target_port
-    local iscsi_target_group iscsirw iscsi_lun
+    local iscsi_target_group iscsi_lun
     local iscsi_username iscsi_password
     local iscsi_in_username iscsi_in_password
     local iscsi_iface_name iscsi_netdev_name
@@ -130,11 +130,6 @@ handle_netroot() {
             iscsi_param="${iscsi_param% } node.session.initial_login_retry_max=$retries"
         fi
     fi
-
-    # XXX is this needed?
-    getarg ro && iscsirw=ro
-    getarg rw && iscsirw=rw
-    fsopts=${fsopts:+$fsopts,}${iscsirw}
 
     if [ -z "$iscsi_initiator" ] && [ -f /sys/firmware/ibft/initiator/initiator-name ] && ! [ -f /tmp/iscsi_set_initiator ]; then
         iscsi_initiator=$(while read -r line || [ -n "$line" ]; do echo "$line"; done < /sys/firmware/ibft/initiator/initiator-name)
