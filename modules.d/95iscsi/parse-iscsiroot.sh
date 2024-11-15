@@ -26,8 +26,6 @@ if [ -z "$netroot" ]; then
     fi
 fi
 
-[ -z "$iscsi_firmware" ] && getargbool 0 rd.iscsi.firmware && iscsi_firmware="1"
-
 # Root takes precedence over netroot
 if [ "${root%%:*}" = "iscsi" ]; then
     if [ -n "$netroot" ]; then
@@ -56,8 +54,8 @@ if [ "${root}" = "/dev/root" ] && getarg "netroot=dhcp"; then
     systemctl is-active systemd-udevd && udevadm control --reload-rules
 fi
 
-# iscsi_firmware does not need argument checking
-if [ -n "$iscsi_firmware" ]; then
+# The iscsi parameter from the BIOS firmware does not need argument checking
+if getargbool 0 rd.iscsi.firmware; then
     if [ "$root" != "dhcp" ] && [ "$netroot" != "dhcp" ]; then
         [ -z "$netroot" ] && netroot=iscsi:
     fi
