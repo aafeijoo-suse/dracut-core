@@ -14,16 +14,11 @@ type write_fs_tab > /dev/null 2>&1 || . /lib/fs-lib.sh
 [ -z "$root" ] && root=$(getarg root=)
 if [ -z "$netroot" ]; then
     for nroot in $(getargs netroot=); do
-        [ "${nroot%%:*}" = "iscsi" ] && break
+        if [ "${nroot%%:*}" = "iscsi" ]; then
+            netroot="$nroot"
+            break
+        fi
     done
-    if [ "${nroot%%:*}" = "iscsi" ]; then
-        netroot="$nroot"
-    else
-        for nroot in $(getargs netroot=); do
-            [ "${nroot%%:*}" = "dhcp" ] && break
-        done
-        netroot="$nroot"
-    fi
 fi
 
 # Root takes precedence over netroot
@@ -40,25 +35,12 @@ if [ "${root%%:*}" = "iscsi" ]; then
     write_fs_tab /dev/root
 fi
 
-# If it's not empty or iscsi we don't continue
-for nroot in $(getargs netroot); do
-    [ "${nroot%%:*}" = "iscsi" ] || continue
-    netroot="$nroot"
-    break
-done
-
-# Root takes precedence over netroot
-if [ "${root}" = "/dev/root" ] && getarg "netroot=dhcp"; then
-    # if root is not specified try to mount the whole iSCSI LUN
-    printf 'ENV{DEVTYPE}!="partition", SYMLINK=="disk/by-path/*-iscsi-*-*", SYMLINK+="root"\n' >> /etc/udev/rules.d/99-iscsi-root.rules
-    systemctl is-active systemd-udevd && udevadm control --reload-rules
-fi
+# If netroot it's not iscsi we don't continue
+[ "${netroot%%:*}" = "iscsi" ] || return 1
 
 # The iscsi parameter from the BIOS firmware does not need argument checking
 if getargbool 0 rd.iscsi.firmware; then
-    if [ "$root" != "dhcp" ] && [ "$netroot" != "dhcp" ]; then
-        [ -z "$netroot" ] && netroot=iscsi:
-    fi
+    netroot="iscsi:"
     modprobe -b -q iscsi_boot_sysfs 2> /dev/null
     modprobe -b -q iscsi_ibft
     # if no ip= is given, but firmware
@@ -75,7 +57,7 @@ fi
 
 modprobe --all -b -q qla4xxx cxgb3i cxgb4i bnx2i be2iscsi
 
-if [ -n "$netroot" ] && [ "$root" != "/dev/root" ] && [ "$root" != "dhcp" ]; then
+if [ "$root" != "/dev/root" ] && [ "$root" != "dhcp" ]; then
     if ! getargbool 1 rd.neednet > /dev/null || ! getarg "ip="; then
         /sbin/initqueue --unique --onetime --settled /sbin/iscsiroot dummy "'$netroot'" "'$NEWROOT'"
     fi
@@ -106,10 +88,6 @@ if [ -z "$iscsi_initiator" ] && [ -f /sys/firmware/ibft/initiator/initiator-name
         # FIXME: iscsid is not yet ready, when the service is :-/
         sleep 1
     fi
-fi
-
-if [ -z "$netroot" ] || ! [ "${netroot%%:*}" = "iscsi" ]; then
-    return 1
 fi
 
 /sbin/initqueue --unique --onetime --timeout /sbin/iscsiroot timeout "$netroot" "$NEWROOT"
