@@ -32,7 +32,7 @@ install() {
     inst NetworkManager
     inst_multiple -o /usr/{lib,libexec}/nm-initrd-generator
     inst_multiple -o /usr/{lib,libexec}/nm-daemon-helper
-    inst_multiple -o teamd dhclient
+    inst_multiple -o teamd dhclient nft
     inst_hook cmdline 99 "$moddir/nm-config.sh"
 
     inst "$dbussystem"/org.freedesktop.NetworkManager.conf
