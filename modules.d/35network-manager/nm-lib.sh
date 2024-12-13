@@ -27,7 +27,3 @@ nm_generate_connections() {
         done
     fi
 }
-
-nm_reload_connections() {
-    systemctl is-active nm-initrd.service && nmcli connection reload
-}
