@@ -28,7 +28,6 @@ install() {
 
     inst_multiple -o \
         "$sysusers"/basic.conf \
-        "$sysusers"/systemd.conf \
         "$systemdsystemunitdir"/systemd-sysusers.service \
         "$systemdsystemunitdir"/sysinit.target.wants/systemd-sysusers.service \
         systemd-sysusers
@@ -37,7 +36,6 @@ install() {
     if [[ $hostonly ]]; then
         inst_multiple -H -o \
             "$sysusersconfdir"/basic.conf \
-            "$sysusersconfdir"/systemd.conf \
             "$systemdsystemconfdir"/systemd-sysusers.service \
             "$systemdsystemconfdir/systemd-sysusers.service.d/*.conf"
     fi
