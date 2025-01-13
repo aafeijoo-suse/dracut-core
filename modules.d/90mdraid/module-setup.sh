@@ -65,9 +65,12 @@ cmdline() {
 
 # called by dracut
 install() {
-    inst_multiple -o mdmon
-    inst "$(command -v partx)" /sbin/partx
-    inst "$(command -v mdadm)" /sbin/mdadm
+    inst_multiple -o \
+        "$systemdsystemunitdir"/mdadm-grow-continue@.service \
+        "$systemdsystemunitdir"/mdadm-last-resort@.service \
+        "$systemdsystemunitdir"/mdadm-last-resort@.timer \
+        "$systemdsystemunitdir"/mdmon@.service \
+        mdadm mdmon partx
 
     if [[ $hostonly_cmdline == "yes" ]]; then
         local _raidconf
@@ -110,22 +113,8 @@ install() {
     inst_hook pre-udev 30 "$moddir/mdmon-pre-udev.sh"
     inst_hook pre-trigger 30 "$moddir/parse-md.sh"
     inst_hook pre-mount 10 "$moddir/mdraid-waitclean.sh"
-    inst_hook cleanup 99 "$moddir/mdraid-needshutdown.sh"
-    inst_hook shutdown 30 "$moddir/md-shutdown.sh"
     inst_script "$moddir/mdraid-cleanup.sh" /sbin/mdraid-cleanup
     inst_script "$moddir/mdraid_start.sh" /sbin/mdraid_start
-    if [[ -e $systemdsystemunitdir/mdmon@.service ]]; then
-        inst_simple "$systemdsystemunitdir"/mdmon@.service
-    fi
-    if [[ -e $systemdsystemunitdir/mdadm-last-resort@.service ]]; then
-        inst_simple "$systemdsystemunitdir"/mdadm-last-resort@.service
-    fi
-    if [[ -e $systemdsystemunitdir/mdadm-last-resort@.timer ]]; then
-        inst_simple "$systemdsystemunitdir"/mdadm-last-resort@.timer
-    fi
-    if [[ -e $systemdsystemunitdir/mdadm-grow-continue@.service ]]; then
-        inst_simple "$systemdsystemunitdir"/mdadm-grow-continue@.service
-    fi
-    inst_hook pre-shutdown 30 "$moddir/mdmon-pre-shutdown.sh"
+
     dracut_need_initqueue
 }
