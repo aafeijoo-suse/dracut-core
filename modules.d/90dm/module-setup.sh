@@ -25,7 +25,5 @@ install() {
     # debian udev rules
     inst_rules 60-persistent-storage-dm.rules 55-dm.rules
 
-    inst_rules "$moddir/11-dm.rules"
-
     inst_hook shutdown 25 "$moddir/dm-shutdown.sh"
 }
