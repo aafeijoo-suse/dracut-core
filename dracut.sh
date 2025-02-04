@@ -127,7 +127,7 @@ Creates initial ramdisk images for preloading modules
   --kernel-cmdline [PARAMETERS]
                         Specify default kernel command line parameters.
   --strip               Strip binaries in the initramfs.
-  --aggressive-strip     Strip more than just debug symbol and sections,
+  --aggressive-strip    Strip more than just debug symbol and sections,
                          for a smaller initramfs build. The --strip option must
                          also be specified.
   --nostrip             Do not strip binaries in the initramfs.
@@ -1561,18 +1561,15 @@ for dev in "${host_devs[@]}"; do
 done
 
 for dev in "${!host_fs_types[@]}"; do
-    [[ ${host_fs_types[$dev]} == "reiserfs" ]] || [[ ${host_fs_types[$dev]} == "xfs" ]] || continue
-    rootopts=$(find_dev_fsopts "$dev")
-    if [[ ${host_fs_types[$dev]} == "reiserfs" ]]; then
-        journaldev=$(fs_get_option "$rootopts" "jdev")
-    elif [[ ${host_fs_types[$dev]} == "xfs" ]]; then
+    if [[ ${host_fs_types[$dev]} == "xfs" ]]; then
+        rootopts=$(find_dev_fsopts "$dev")
         journaldev=$(fs_get_option "$rootopts" "logdev")
-    fi
-    if [[ $journaldev ]]; then
-        dev="$(readlink -f "$dev")"
-        _push_host_devs "$dev"
-        _get_fs_type "$dev"
-        check_block_and_slaves_all _get_fs_type "$(get_maj_min "$dev")"
+        if [[ $journaldev ]]; then
+            dev="$(readlink -f "$dev")"
+            _push_host_devs "$dev"
+            _get_fs_type "$dev"
+            check_block_and_slaves_all _get_fs_type "$(get_maj_min "$dev")"
+        fi
     fi
 done
 

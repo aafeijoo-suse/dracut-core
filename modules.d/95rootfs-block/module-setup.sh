@@ -8,16 +8,12 @@ depends() {
 cmdline_journal() {
     if [[ $hostonly ]]; then
         for dev in "${!host_fs_types[@]}"; do
-            [[ ${host_fs_types[$dev]} == "reiserfs" ]] || [[ ${host_fs_types[$dev]} == "xfs" ]] || continue
-            rootopts=$(find_dev_fsopts "$dev")
-            if [[ ${host_fs_types[$dev]} == "reiserfs" ]]; then
-                journaldev=$(fs_get_option "$rootopts" "jdev")
-            elif [[ ${host_fs_types[$dev]} == "xfs" ]]; then
+            if [[ ${host_fs_types[$dev]} == "xfs" ]]; then
+                rootopts=$(find_dev_fsopts "$dev")
                 journaldev=$(fs_get_option "$rootopts" "logdev")
-            fi
-
-            if [ -n "$journaldev" ]; then
-                printf " root.journaldev=%s" "$journaldev"
+                if [ -n "$journaldev" ]; then
+                    printf " root.journaldev=%s" "$journaldev"
+                fi
             fi
         done
     fi
