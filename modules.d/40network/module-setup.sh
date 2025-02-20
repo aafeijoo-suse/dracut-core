@@ -2,6 +2,7 @@
 
 # called by dracut
 check() {
+    require_binaries ip sed awk grep || return 1
     return 255
 }
 
@@ -38,7 +39,7 @@ install() {
     inst_simple "$moddir/net-lib.sh" "/lib/net-lib.sh"
     inst_hook pre-udev 50 "$moddir/ifname-genrules.sh"
     inst_hook cmdline 91 "$moddir/dhcp-root.sh"
-    inst_multiple ip sed awk grep pgrep tr
+    inst_multiple ip sed awk grep
     inst_multiple -o arping arping2
     dracut_need_initqueue
 }
