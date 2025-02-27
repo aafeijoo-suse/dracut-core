@@ -47,8 +47,17 @@ install() {
     # "Wired connection #" DHCP connections for Ethernet interfaces
     inst_simple "$moddir"/initrd-no-auto-default.conf /usr/lib/NetworkManager/conf.d/
 
-    inst_simple "$moddir"/nm-initrd.service "$systemdsystemunitdir"/nm-initrd.service
-    inst_simple "$moddir"/nm-wait-online-initrd.service "$systemdsystemunitdir"/nm-wait-online-initrd.service
+    # Install systemd service units (NetworkManager >= 1.54)
+    inst_multiple -o \
+        "$systemdsystemunitdir"/NetworkManager-config-initrd.service \
+        "$systemdsystemunitdir"/NetworkManager-initrd.service \
+        "$systemdsystemunitdir"/NetworkManager-wait-online-initrd.service
+
+    # dracut specific dropins to override upstream systemd services
+    inst_simple "$moddir/NetworkManager-config-initrd-dracut.conf" "$systemdsystemunitdir/NetworkManager-config-initrd.service.d/NetworkManager-config-initrd-dracut.conf"
+    inst_simple "$moddir/NetworkManager-wait-online-initrd-dracut.conf" "$systemdsystemunitdir/NetworkManager-wait-online-initrd.service.d/NetworkManager-wait-online-initrd-dracut.conf"
+
+    $SYSTEMCTL -q --root "$initdir" enable NetworkManager-initrd.service
 
     # Add default link if there is no persistent network device naming
     if [ ! -e /etc/udev/rules.d/70-persistent-net.rules ]; then
@@ -57,14 +66,11 @@ install() {
         [[ $hostonly ]] && inst_multiple -H -o "${systemdnetworkconfdir}/*.link"
     fi
 
-    $SYSTEMCTL -q --root "$initdir" enable nm-initrd.service
-
     inst_hook initqueue/settled 99 "$moddir/nm-run.sh"
 
     inst_rules 85-nm-unmanaged.rules
     inst_libdir_dir "NetworkManager/$_nm_version"
     inst_libdir_file "NetworkManager/$_nm_version/libnm-device-plugin-team.so"
-    inst_simple "$moddir/nm-lib.sh" "/lib/nm-lib.sh"
 
     if [[ -x "$initdir/usr/sbin/dhclient" ]]; then
         inst_multiple -o /usr/{lib,libexec}/nm-dhcp-helper

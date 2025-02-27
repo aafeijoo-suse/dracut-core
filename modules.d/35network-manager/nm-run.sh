@@ -2,10 +2,6 @@
 
 type source_hook > /dev/null 2>&1 || . /lib/dracut-lib.sh
 
-if [ -s /run/NetworkManager/initrd/hostname ]; then
-    echo "$(< /run/NetworkManager/initrd/hostname)" > /proc/sys/kernel/hostname
-fi
-
 kf_get_string() {
     # NetworkManager writes keyfiles (glib's GKeyFile API). Have a naive
     # parser for it.

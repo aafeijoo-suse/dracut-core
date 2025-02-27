@@ -1,6 +1,6 @@
 #!/bin/bash
 
-type nm_generate_connections > /dev/null 2>&1 || . /lib/nm-lib.sh
+command -v getargbool > /dev/null || . /lib/dracut-lib.sh
 
 if [ -n "$netroot" ] || [ -e /tmp/net.ifaces ]; then
     echo rd.neednet >> /etc/cmdline.d/35-neednet.conf
@@ -22,13 +22,11 @@ if getargbool 0 rd.debug; then
     # See https://github.com/coreos/fedora-coreos-tracker/issues/943
     # shellcheck disable=SC2217
     if [ -w /dev/console ] && (echo < /dev/console) > /dev/null 2> /dev/null; then
-        mkdir -p /run/systemd/system/nm-initrd.service.d
-        cat << EOF > /run/systemd/system/nm-initrd.service.d/tty-output.conf
+        mkdir -p /run/systemd/system/NetworkManager-initrd.service.d
+        cat << EOF > /run/systemd/system/NetworkManager-initrd.service.d/tty-output.conf
 [Service]
 StandardOutput=tty
 EOF
         systemctl --no-block daemon-reload
     fi
 fi
-
-nm_generate_connections
