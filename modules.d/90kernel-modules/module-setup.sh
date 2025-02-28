@@ -43,7 +43,7 @@ installkernel() {
             ohci-hcd ohci-pci \
             uhci-hcd \
             usbhid \
-            xhci-hcd xhci-pci xhci-plat-hcd \
+            xhci-hcd xhci-pci xhci-pci-renesas xhci-plat-hcd \
             "=drivers/hid" \
             "=drivers/tty/serial" \
             "=drivers/input/serio" \
