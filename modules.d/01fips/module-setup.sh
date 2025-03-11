@@ -14,6 +14,7 @@ depends() {
 # called by dracut
 installkernel() {
     local _fipsmodules _mod _bootfstype
+
     if [[ -f "${srcmods}/modules.fips" ]]; then
         read -d '' -r _fipsmodules < "${srcmods}/modules.fips"
     else
@@ -67,29 +68,26 @@ installkernel() {
 
 # called by dracut
 install() {
-    inst_hook pre-pivot 00 "$moddir/fips-boot.sh"
-    inst_hook pre-pivot 01 "$moddir/fips-noboot.sh"
-    inst_hook pre-udev 01 "$moddir/fips-load-crypto.sh"
-    inst_script "$moddir/fips.sh" /sbin/fips.sh
-
-    inst_multiple rmmod insmod mount uname umount sed
-    inst_multiple -o sha512hmac \
-                     fipscheck \
+    inst_multiple modprobe rmmod mount uname umount sed
+    inst_multiple -o fipscheck \
                      /usr/libexec/libkcapi/fipscheck \
                      /usr/lib64/libkcapi/fipscheck \
                      /usr/lib/libkcapi/fipscheck
+
+    inst_hook pre-udev 01 "$moddir/fips-load-crypto.sh"
+    inst_hook pre-pivot 00 "$moddir/fips-boot.sh"
+    inst_hook pre-pivot 01 "$moddir/fips-noboot.sh"
+    inst_script "$moddir/fips-lib.sh" /lib/fips-lib.sh
 
     inst_simple /etc/system-fips
     [ -c "${initdir}"/dev/random ] || mknod "${initdir}"/dev/random c 1 8 \
         || {
             dfatal "Cannot create /dev/random"
-            dfatal "To create an initramfs with fips support, dracut has to run as root"
-            return 1
+            exit 1
         }
     [ -c "${initdir}"/dev/urandom ] || mknod "${initdir}"/dev/urandom c 1 9 \
         || {
             dfatal "Cannot create /dev/urandom"
-            dfatal "To create an initramfs with fips support, dracut has to run as root"
-            return 1
+            exit 1
         }
 }
