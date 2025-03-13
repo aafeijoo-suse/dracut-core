@@ -2106,6 +2106,12 @@ if dracut_module_included "squash"; then
     compress="cat"
 fi
 
+# protect existing output file against build errors
+if [[ -e $outfile ]]; then
+    outfile_final="$outfile"
+    outfile="${outfile}.tmp"
+fi
+
 dinfo "*** Creating image file '$outfile' ***"
 
 if [[ $DRACUT_REPRODUCIBLE ]]; then
@@ -2233,7 +2239,25 @@ else
     exit 1
 fi
 
+if [[ $outfile_final ]]; then
+    dinfo "*** Moving image file '$outfile' to '$outfile_final' ***"
+    if mv -f "$outfile" "$outfile_final"; then
+        dinfo "*** Moving image file '$outfile' to '$outfile_final' done ***"
+        outfile="$outfile_final"
+    else
+        rm -f -- "$outfile_final"
+        dfatal "Move of $outfile_final failed"
+        exit 1
+    fi
+fi
+
 if [[ $split_kernel == yes ]]; then
+    # protect existing output file against build errors
+    if [[ -e $outfile_kernel ]]; then
+        outfile_kernel_final="$outfile_kernel"
+        outfile_kernel="${outfile_kernel}.tmp"
+    fi
+
     dinfo "*** Creating image file '$outfile_kernel' ***"
 
     # do not compress this image if kernel modules are already compressed
@@ -2266,6 +2290,18 @@ if [[ $split_kernel == yes ]]; then
         dfatal "Creation of $outfile_kernel failed"
         exit 1
     fi
+
+    if [[ $outfile_kernel_final ]]; then
+        dinfo "*** Moving image file '$outfile_kernel' to '$outfile_kernel_final' ***"
+        if mv -f "$outfile_kernel" "$outfile_kernel_final"; then
+            dinfo "*** Moving image file '$outfile_kernel' to '$outfile_kernel_final' done ***"
+            outfile_kernel="$outfile_kernel_final"
+        else
+            rm -f -- "$outfile_kernel_final"
+            dfatal "Move of $outfile_kernel_final failed"
+            exit 1
+        fi
+    fi
 fi
 
 # We sync/fsfreeze only if we're operating on a live booted system.
@@ -2290,7 +2326,7 @@ if [[ -d /run/systemd/system ]]; then
     if [[ "$(stat -c %m -- "$outfile")" != "/" ]] && freeze_ok_for_fstype "$outfile"; then
         FSFROZEN="$(dirname "$outfile")"
         if ! (fsfreeze -f "${FSFROZEN}" 2> /dev/null && fsfreeze -u "${FSFROZEN}" 2> /dev/null); then
-            dwarn "Could not fsfreeze $(dirname "$outfile")"
+            dwarn "Could not fsfreeze ${FSFROZEN}"
         fi
         unset FSFROZEN
     fi
