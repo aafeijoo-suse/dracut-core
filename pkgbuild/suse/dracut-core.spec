@@ -345,7 +345,6 @@ rm -f /var/adm/fillup-templates/sysconfig.kernel-mkinitrd
 %ifarch %ix86
 %exclude %{dracutlibdir}/modules.d/01fips
 %endif
-%{dracutlibdir}/modules.d/01systemd-ac-power
 %{dracutlibdir}/modules.d/01systemd-ask-password
 %{dracutlibdir}/modules.d/01systemd-coredump
 %{dracutlibdir}/modules.d/01systemd-creds
