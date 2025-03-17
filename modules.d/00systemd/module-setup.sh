@@ -7,8 +7,8 @@ check() {
     [[ $mount_needs ]] && return 1
     # If the binary(s) requirements are not fulfilled the module can't be installed
     require_binaries -s "$systemdutildir"/systemd || return 1
-    # Return 255 to only include the module, if another module requires it.
-    return 255
+    # Return 0 to always include the module.
+    return 0
 }
 
 # Module dependency requirements.
@@ -33,70 +33,78 @@ install() {
     fi
 
     inst_multiple -o \
-        "$systemdutildir"/systemd \
-        "$systemdutildir"/systemd-coredump \
-        "$systemdutildir"/systemd-cgroups-agent \
-        "$systemdutildir"/systemd-executor \
-        "$systemdutildir"/systemd-shutdown \
-        "$systemdutildir"/systemd-reply-password \
-        "$systemdutildir"/systemd-fsck \
-        "$systemdutildir"/systemd-vconsole-setup \
-        "$systemdutildir"/systemd-volatile-root \
-        "$systemdutildir"/systemd-sysroot-fstab-check \
+        "$systemdutildir"/system.conf \
+        "$systemdutildir"/system.conf.d/*.conf \
         "$systemdutildir"/system-generators/systemd-debug-generator \
         "$systemdutildir"/system-generators/systemd-fstab-generator \
         "$systemdutildir"/system-generators/systemd-gpt-auto-generator \
-        "$systemdutildir"/system.conf \
-        "$systemdutildir"/system.conf.d/*.conf \
+        "$systemdutildir"/systemd \
+        "$systemdutildir"/systemd-cgroups-agent \
+        "$systemdutildir"/systemd-coredump \
+        "$systemdutildir"/systemd-executor \
+        "$systemdutildir"/systemd-fsck \
+        "$systemdutildir"/systemd-reply-password \
+        "$systemdutildir"/systemd-shutdown \
+        "$systemdutildir"/systemd-sysroot-fstab-check \
+        "$systemdutildir"/systemd-vconsole-setup \
+        "$systemdutildir"/systemd-volatile-root \
+        "$systemdsystemunitdir"/-.slice \
+        "$systemdsystemunitdir"/basic.target \
         "$systemdsystemunitdir"/debug-shell.service \
         "$systemdsystemunitdir"/cryptsetup.target \
         "$systemdsystemunitdir"/cryptsetup-pre.target \
-        "$systemdsystemunitdir"/remote-cryptsetup.target \
+        "$systemdsystemunitdir"/ctrl-alt-del.target \
         "$systemdsystemunitdir"/emergency.target \
-        "$systemdsystemunitdir"/sysinit.target \
-        "$systemdsystemunitdir"/basic.target \
+        "$systemdsystemunitdir"/final.target \
         "$systemdsystemunitdir"/halt.target \
         "$systemdsystemunitdir"/kexec.target \
+        "$systemdsystemunitdir"/kmod-static-nodes.service \
         "$systemdsystemunitdir"/local-fs.target \
         "$systemdsystemunitdir"/local-fs-pre.target \
-        "$systemdsystemunitdir"/remote-fs.target \
-        "$systemdsystemunitdir"/remote-fs-pre.target \
+        "$systemdsystemunitdir"/initrd.target \
+        "$systemdsystemunitdir"/initrd-cleanup.service \
+        "$systemdsystemunitdir"/initrd-fs.target \
+        "$systemdsystemunitdir"/initrd-parse-etc.service \
+        "$systemdsystemunitdir"/initrd-root-device.target \
+        "$systemdsystemunitdir"/initrd-root-fs.target \
+        "$systemdsystemunitdir"/initrd-switch-root.service \
+        "$systemdsystemunitdir"/initrd-switch-root.target \
+        "$systemdsystemunitdir"/initrd-udevadm-cleanup-db.service \
+        "$systemdsystemunitdir"/initrd-usr-fs.target \
+        "$systemdsystemunitdir"/modprobe@.service \
         "$systemdsystemunitdir"/multi-user.target \
         "$systemdsystemunitdir"/network.target \
         "$systemdsystemunitdir"/network-pre.target \
         "$systemdsystemunitdir"/network-online.target \
         "$systemdsystemunitdir"/nss-lookup.target \
         "$systemdsystemunitdir"/nss-user-lookup.target \
+        "$systemdsystemunitdir"/paths.target \
         "$systemdsystemunitdir"/poweroff.target \
         "$systemdsystemunitdir"/reboot.target \
+        "$systemdsystemunitdir"/remote-cryptsetup.target \
+        "$systemdsystemunitdir"/remote-fs.target \
+        "$systemdsystemunitdir"/remote-fs-pre.target \
         "$systemdsystemunitdir"/rescue.target \
         "$systemdsystemunitdir"/rpcbind.target \
         "$systemdsystemunitdir"/shutdown.target \
-        "$systemdsystemunitdir"/final.target \
         "$systemdsystemunitdir"/sigpwr.target \
+        "$systemdsystemunitdir"/slices.target \
         "$systemdsystemunitdir"/sockets.target \
         "$systemdsystemunitdir"/swap.target \
-        "$systemdsystemunitdir"/timers.target \
-        "$systemdsystemunitdir"/paths.target \
-        "$systemdsystemunitdir"/umount.target \
         "$systemdsystemunitdir"/sys-kernel-config.mount \
-        "$systemdsystemunitdir"/modprobe@.service \
-        "$systemdsystemunitdir"/kmod-static-nodes.service \
+        "$systemdsystemunitdir"/sysinit.target \
+        "$systemdsystemunitdir"/sysinit.target.wants/kmod-static-nodes.service \
+        "$systemdsystemunitdir"/syslog.socket \
+        "$systemdsystemunitdir"/system.slice \
+        "$systemdsystemunitdir"/systemd-fsck@.service \
         "$systemdsystemunitdir"/systemd-halt.service \
+        "$systemdsystemunitdir"/systemd-kexec.service \
         "$systemdsystemunitdir"/systemd-poweroff.service \
         "$systemdsystemunitdir"/systemd-reboot.service \
-        "$systemdsystemunitdir"/systemd-kexec.service \
-        "$systemdsystemunitdir"/systemd-fsck@.service \
         "$systemdsystemunitdir"/systemd-vconsole-setup.service \
         "$systemdsystemunitdir"/systemd-volatile-root.service \
-        "$systemdsystemunitdir"/sysinit.target.wants/kmod-static-nodes.service \
-        "$systemdsystemunitdir"/ctrl-alt-del.target \
-        "$systemdsystemunitdir"/reboot.target \
-        "$systemdsystemunitdir"/systemd-reboot.service \
-        "$systemdsystemunitdir"/syslog.socket \
-        "$systemdsystemunitdir"/slices.target \
-        "$systemdsystemunitdir"/system.slice \
-        "$systemdsystemunitdir"/-.slice \
+        "$systemdsystemunitdir"/timers.target \
+        "$systemdsystemunitdir"/umount.target \
         systemctl \
         echo swapoff \
         kmod insmod rmmod modprobe modinfo depmod lsmod \
@@ -171,7 +179,7 @@ EOF
 
     mkdir -p "$initdir/etc/systemd"
 
-    $SYSTEMCTL -q --root "$initdir" set-default multi-user.target
+    $SYSTEMCTL -q --root "$initdir" set-default initrd.target
 
     # Install library file(s)
     _arch=${DRACUT_ARCH:-$(uname -m)}

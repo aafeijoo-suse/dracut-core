@@ -8,7 +8,7 @@ check() {
 }
 
 depends() {
-    echo "systemd-initrd"
+    echo systemd
     return 0
 }
 
