@@ -19,7 +19,7 @@ depends() {
 
     # This module has external dependency on other module(s).
     deps="systemd"
-    systemd-creds -q has-tpm2 && deps+=" tpm2-tss"
+    systemd-analyze -q has-tpm2 && deps+=" tpm2-tss"
     echo "$deps"
 
     # Return 0 to include the dependent module(s) in the initramfs.
