@@ -11,8 +11,8 @@ check() {
         "$systemdutildir"/systemd-coredump \
         || return 1
 
-    # Return 255 to only include the module, if another module requires it.
-    return 255
+    # Return 0 to always include the module.
+    return 0
 
 }
 
