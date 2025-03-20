@@ -2,9 +2,6 @@
 
 type incol2 > /dev/null 2>&1 || . /lib/dracut-lib.sh
 
-[ -f /tmp/nfs.rpc_pipefs_path ] && read -r rpcpipefspath < /tmp/nfs.rpc_pipefs_path
-[ -z "$rpcpipefspath" ] && rpcpipefspath=var/lib/nfs/rpc_pipefs
-
 pid=$(pidof rpc.idmapd)
 [ -n "$pid" ] && kill "$pid"
 
@@ -12,13 +9,12 @@ pid=$(pidof rpcbind)
 [ -n "$pid" ] && kill "$pid"
 
 if incol2 /proc/mounts /var/lib/nfs/rpc_pipefs; then
-    # try to create the destination directory
-    [ -d "$NEWROOT"/$rpcpipefspath ] \
-        || mkdir -m 0755 -p "$NEWROOT"/$rpcpipefspath 2> /dev/null
-
-    if [ -d "$NEWROOT"/$rpcpipefspath ]; then
-        # mount --move does not seem to work???
-        mount --bind /var/lib/nfs/rpc_pipefs "$NEWROOT"/$rpcpipefspath
+    [ -d "$NEWROOT"/var/lib/nfs/rpc_pipefs ] \
+        || mkdir -m 0755 -p "$NEWROOT"/var/lib/nfs/rpc_pipefs 2> /dev/null
+    if [ -d "$NEWROOT"/var/lib/nfs/rpc_pipefs ]; then
+        # mount --move does not work (moving a mount residing under a shared
+        # mount is unsupported), so --bind + umount.
+        mount --bind /var/lib/nfs/rpc_pipefs "$NEWROOT"/var/lib/nfs/rpc_pipefs
     fi
     umount /var/lib/nfs/rpc_pipefs 2> /dev/null
 fi
