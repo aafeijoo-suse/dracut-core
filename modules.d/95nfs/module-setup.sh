@@ -19,7 +19,7 @@ get_nfs_type() {
 
 # called by dracut
 check() {
-    require_binaries rpcbind mount.nfs mount.nfs4 umount sed chmod chown grep || return 1
+    require_binaries mount.nfs mount.nfs4 umount sed chmod chown grep || return 1
 
     [[ $hostonly ]] || [[ $mount_needs ]] && {
         [[ "$(get_nfs_type)" ]] && return 0
@@ -74,10 +74,16 @@ cmdline() {
 # called by dracut
 install() {
     local _nsslibs _rpcuser
-    inst_multiple -o rpc.idmapd mount.nfs mount.nfs4 umount sed /etc/netconfig chmod chown grep "$tmpfilesdir/rpcbind.conf"
-    inst_multiple -o /etc/idmapd.conf
-    inst_multiple -o /etc/services /etc/nsswitch.conf /etc/rpc /etc/protocols
-    inst_multiple -o /usr/etc/services /usr/etc/nsswitch.conf /usr/etc/rpc /usr/etc/protocols
+
+    inst_multiple -o rpc.idmapd mount.nfs mount.nfs4 umount sed chmod chown grep
+    inst_multiple -o \
+        {,/usr}/etc/idmapd.conf \
+        /etc/netconfig \
+        {,/usr}/etc/nsswitch.conf \
+        {,/usr}/etc/protocols \
+        {,/usr}/etc/rpc \
+        {,/usr}/etc/services \
+        "$tmpfilesdir/rpcbind.conf"
 
     if [[ $hostonly_cmdline == "yes" ]]; then
         local _netconf
@@ -85,12 +91,8 @@ install() {
         [[ $_netconf ]] && printf "%s\n" "$_netconf" >> "${initdir}/etc/cmdline.d/95nfs.conf"
     fi
 
-    if [[ -f /lib/modprobe.d/nfs.conf ]]; then
-        inst_multiple /lib/modprobe.d/nfs.conf
-    else
-        [[ -d $initdir/etc/modprobe.d ]] || mkdir -p "$initdir"/etc/modprobe.d
-        echo "alias nfs4 nfs" > "$initdir"/etc/modprobe.d/nfs.conf
-    fi
+    [[ -d $initdir/etc/modprobe.d ]] || mkdir -p "$initdir"/etc/modprobe.d
+    echo "alias nfs4 nfs" > "$initdir"/etc/modprobe.d/nfs.conf
 
     inst_libdir_file 'libnfsidmap_nsswitch.so*' 'libnfsidmap/*.so' 'libnfsidmap*.so*'
 
@@ -108,25 +110,22 @@ install() {
     inst_hook pre-udev 99 "$moddir/nfs-start-rpc.sh"
     inst_hook cleanup 99 "$moddir/nfsroot-cleanup.sh"
     inst "$moddir/nfsroot.sh" "/sbin/nfsroot"
-
-    # For strict hostonly, only install rpcbind for NFS < 4
-    if [[ $hostonly_mode != "strict" ]] || [[ "$(get_nfs_type)" != "nfs4" ]]; then
-        inst_multiple rpcbind
-    fi
-
     inst "$moddir/nfs-lib.sh" "/lib/nfs-lib.sh"
+
     mkdir -m 0755 -p "$initdir/var/lib/nfs"
     mkdir -m 0755 -p "$initdir/var/lib/nfs/rpc_pipefs"
-    mkdir -m 0770 -p "$initdir/var/lib/rpcbind"
 
-    # Rather than copy the passwd file in, just set a user for rpcbind
-    # We'll save the state and restart the daemon from the root anyway
-    _rpcuser=$(grep -m1 -E '^nfsnobody:|^rpc:|^rpcuser:' /etc/passwd)
-    if [[ -n "$_rpcuser" ]]; then
-        echo "$_rpcuser" >> "$initdir/etc/passwd"
-        # rpc user needs to be able to write to this directory to save the warmstart file
-        chown "${_rpcuser%%:*}": "$initdir/var/lib/rpcbind"
-        grep -E '^nogroup:|^rpc:|^nobody:' /etc/group >> "$initdir/etc/group"
+    # For hostonly, only install rpcbind for NFS < 4
+    if ! [[ $hostonly ]] || [[ "$(get_nfs_type)" == "nfs" ]]; then
+        inst_multiple rpcbind
+        mkdir -m 0770 -p "$initdir/var/lib/rpcbind"
+        _rpcuser=$(grep -m1 -E '^nfsnobody:|^rpc:|^rpcuser:' /etc/passwd)
+        if [[ -n "$_rpcuser" ]]; then
+            echo "$_rpcuser" >> "$initdir/etc/passwd"
+            # rpc user needs to be able to write to this directory to save the warmstart file
+            chown "${_rpcuser%%:*}": "$initdir/var/lib/rpcbind"
+            grep -E '^nogroup:|^rpc:|^nobody:' /etc/group >> "$initdir/etc/group"
+        fi
     fi
 
     dracut_need_initqueue
