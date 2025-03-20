@@ -19,7 +19,7 @@ get_nfs_type() {
 
 # called by dracut
 check() {
-    require_binaries rpcbind rpc.statd mount.nfs mount.nfs4 umount sed chmod chown grep || return 1
+    require_binaries rpcbind mount.nfs mount.nfs4 umount sed chmod chown grep || return 1
 
     [[ $hostonly ]] || [[ $mount_needs ]] && {
         [[ "$(get_nfs_type)" ]] && return 0
@@ -111,14 +111,13 @@ install() {
 
     # For strict hostonly, only install rpcbind for NFS < 4
     if [[ $hostonly_mode != "strict" ]] || [[ "$(get_nfs_type)" != "nfs4" ]]; then
-        inst_multiple rpcbind rpc.statd
+        inst_multiple rpcbind
     fi
 
     inst "$moddir/nfs-lib.sh" "/lib/nfs-lib.sh"
     mkdir -m 0755 -p "$initdir/var/lib/nfs"
     mkdir -m 0755 -p "$initdir/var/lib/nfs/rpc_pipefs"
     mkdir -m 0770 -p "$initdir/var/lib/rpcbind"
-    mkdir -m 0755 -p "$initdir/var/lib/nfs/sm"
 
     # Rather than copy the passwd file in, just set a user for rpcbind
     # We'll save the state and restart the daemon from the root anyway
