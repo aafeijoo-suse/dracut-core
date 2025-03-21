@@ -30,8 +30,13 @@ check() {
 
 # called by dracut
 depends() {
-    # We depend on network modules being loaded
-    echo network
+    local _deps
+    _deps="network"
+    if ! [[ $hostonly ]] || [[ "$(get_nfs_type)" == "nfs" ]]; then
+        [[ -e "$sysusers"/statd-user.conf ]] && _deps+=" systemd-sysusers"
+    fi
+    echo "$_deps"
+    return 0
 }
 
 # called by dracut
@@ -92,7 +97,7 @@ install() {
         "$systemdutildir"/system-generators/rpc-pipefs-generator \
         "$systemdsystemunitdir"/rpc_pipefs.target \
         "$systemdsystemunitdir"/var-lib-nfs-rpc_pipefs.mount \
-        rpc.statd rpc.idmapd mount.nfs mount.nfs4 umount sed chown grep
+        rpc.idmapd mount.nfs mount.nfs4 umount sed chown grep
 
     for _f in {,/usr}/etc/nfs.conf {,/usr}/etc/nfs.conf.d/*.conf; do
         [[ -f $_f ]] || continue
@@ -133,7 +138,8 @@ install() {
 
     # For hostonly, only install rpcbind for NFS < 4
     if ! [[ $hostonly ]] || [[ "$(get_nfs_type)" == "nfs" ]]; then
-        inst_multiple rpcbind
+        inst_multiple -o rpcbind rpc.statd
+
         mkdir -m 0770 -p "$initdir/var/lib/rpcbind"
         _rpcuser=$(grep -m1 -E '^nfsnobody:|^rpc:|^rpcuser:' /etc/passwd)
         if [[ -n "$_rpcuser" ]]; then
@@ -141,6 +147,12 @@ install() {
             # rpc user needs to be able to write to this directory to save the warmstart file
             chown "${_rpcuser%%:*}": "$initdir/var/lib/rpcbind"
             grep -E '^nogroup:|^rpc:|^nobody:' /etc/group >> "$initdir/etc/group"
+        fi
+
+        # SUSE specific
+        if [[ -e "$sysusers"/statd-user.conf ]]; then
+            inst_simple "$sysusers"/statd-user.conf
+            inst_simple "$moddir/nfs-tmpfile-dracut.conf" "$tmpfilesdir/nfs-tmpfile-dracut.conf"
         fi
     fi
 
