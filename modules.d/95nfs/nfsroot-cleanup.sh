@@ -2,6 +2,9 @@
 
 type pidof > /dev/null 2>&1 || . /lib/dracut-lib.sh
 
+pid=$(pidof rpc.statd)
+[ -n "$pid" ] && kill "$pid"
+
 pid=$(pidof rpc.idmapd)
 [ -n "$pid" ] && kill "$pid"
 

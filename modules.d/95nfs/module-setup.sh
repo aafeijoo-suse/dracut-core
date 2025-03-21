@@ -92,7 +92,7 @@ install() {
         "$systemdutildir"/system-generators/rpc-pipefs-generator \
         "$systemdsystemunitdir"/rpc_pipefs.target \
         "$systemdsystemunitdir"/var-lib-nfs-rpc_pipefs.mount \
-        rpc.idmapd mount.nfs mount.nfs4 umount sed chown grep
+        rpc.statd rpc.idmapd mount.nfs mount.nfs4 umount sed chown grep
 
     for _f in {,/usr}/etc/nfs.conf {,/usr}/etc/nfs.conf.d/*.conf; do
         [[ -f $_f ]] || continue
@@ -129,6 +129,7 @@ install() {
     inst "$moddir/nfs-lib.sh" "/lib/nfs-lib.sh"
 
     mkdir -m 0755 -p "$initdir/var/lib/nfs"
+    mkdir -m 0755 -p "$initdir/var/lib/nfs/sm"
 
     # For hostonly, only install rpcbind for NFS < 4
     if ! [[ $hostonly ]] || [[ "$(get_nfs_type)" == "nfs" ]]; then

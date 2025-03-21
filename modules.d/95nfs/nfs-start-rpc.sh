@@ -14,6 +14,10 @@ if load_fstype sunrpc rpc_pipefs; then
         rpcbind
     fi
 
+    # Start rpc.statd as mount won't let us use locks on a NFSv4
+    # filesystem without talking to it. NFSv4 does locks internally,
+    # rpc.lockd isn't needed
+    command -v rpc.statd > /dev/null && [ -z "$(pidof rpc.statd)" ] && rpc.statd
     command -v rpc.idmapd > /dev/null && [ -z "$(pidof rpc.idmapd)" ] && rpc.idmapd
 else
     warn "nfs-start-rpc: kernel module 'sunrpc' not in the initramfs, or support for filesystem 'rpc_pipefs' missing"
