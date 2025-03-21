@@ -73,9 +73,14 @@ cmdline() {
 
 # called by dracut
 install() {
-    local _nsslibs _rpcuser
+    local _f _includes _i _nsslibs _rpcuser
 
-    inst_multiple -o rpc.idmapd mount.nfs mount.nfs4 umount sed chmod chown grep
+    if [[ $hostonly_cmdline == "yes" ]]; then
+        local _netconf
+        _netconf="$(cmdline)"
+        [[ $_netconf ]] && printf "%s\n" "$_netconf" >> "${initdir}/etc/cmdline.d/95nfs.conf"
+    fi
+
     inst_multiple -o \
         {,/usr}/etc/idmapd.conf \
         /etc/netconfig \
@@ -83,13 +88,22 @@ install() {
         {,/usr}/etc/protocols \
         {,/usr}/etc/rpc \
         {,/usr}/etc/services \
-        "$tmpfilesdir/rpcbind.conf"
+        "$tmpfilesdir/rpcbind.conf" \
+        "$systemdutildir"/system-generators/rpc-pipefs-generator \
+        "$systemdsystemunitdir"/rpc_pipefs.target \
+        "$systemdsystemunitdir"/var-lib-nfs-rpc_pipefs.mount \
+        rpc.idmapd mount.nfs mount.nfs4 umount sed chmod chown grep
 
-    if [[ $hostonly_cmdline == "yes" ]]; then
-        local _netconf
-        _netconf="$(cmdline)"
-        [[ $_netconf ]] && printf "%s\n" "$_netconf" >> "${initdir}/etc/cmdline.d/95nfs.conf"
-    fi
+    for _f in {,/usr}/etc/nfs.conf {,/usr}/etc/nfs.conf.d/*.conf; do
+        [[ -f $_f ]] || continue
+        inst_simple "$_f"
+        _includes=($(grep "include" "$_f" | grep -v "^#" | cut -d '=' -f 2))
+        for _i in "${_includes[@]}"; do
+            _i=${_i#-}
+            [[ -f $_i ]] || continue
+            inst_simple "$_i"
+        done
+    done
 
     [[ -d $initdir/etc/modprobe.d ]] || mkdir -p "$initdir"/etc/modprobe.d
     echo "alias nfs4 nfs" > "$initdir"/etc/modprobe.d/nfs.conf
@@ -115,7 +129,6 @@ install() {
     inst "$moddir/nfs-lib.sh" "/lib/nfs-lib.sh"
 
     mkdir -m 0755 -p "$initdir/var/lib/nfs"
-    mkdir -m 0755 -p "$initdir/var/lib/nfs/rpc_pipefs"
 
     # For hostonly, only install rpcbind for NFS < 4
     if ! [[ $hostonly ]] || [[ "$(get_nfs_type)" == "nfs" ]]; then

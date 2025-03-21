@@ -3,8 +3,8 @@
 type load_fstype > /dev/null 2>&1 || . /lib/dracut-lib.sh
 
 if load_fstype sunrpc rpc_pipefs; then
-    [ ! -d /var/lib/nfs/rpc_pipefs/nfs ] \
-        && mount -t rpc_pipefs rpc_pipefs /var/lib/nfs/rpc_pipefs
+    # Start rpc_pipefs.target
+    systemctl start rpc_pipefs.target
 
     # Start rpcbind
     if command -v rpcbind > /dev/null && [ -z "$(pidof rpcbind)" ]; then
