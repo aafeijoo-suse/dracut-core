@@ -94,8 +94,10 @@ install() {
     [[ -d $initdir/etc/modprobe.d ]] || mkdir -p "$initdir"/etc/modprobe.d
     echo "alias nfs4 nfs" > "$initdir"/etc/modprobe.d/nfs.conf
 
-    inst_libdir_file 'libnfsidmap_nsswitch.so*' 'libnfsidmap/*.so' 'libnfsidmap*.so*'
-
+    _arch=${DRACUT_ARCH:-$(uname -m)}
+    inst_libdir_file \
+        {"tls/$_arch/",tls/,"$_arch/",}"libnfsidmap*.so*" \
+        {"tls/$_arch/",tls/,"$_arch/",}"libnfsidmap*/*.so"
     _nsslibs=$(
         cat /{,usr/}etc/nsswitch.conf 2> /dev/null \
             | sed -e '/^#/d' -e 's/^.*://' -e 's/\[NOTFOUND=return\]//' \
@@ -103,8 +105,8 @@ install() {
     )
     _nsslibs=${_nsslibs#|}
     _nsslibs=${_nsslibs%|}
-
-    inst_libdir_file -n "$_nsslibs" 'libnss_*.so*'
+    inst_libdir_file -n "$_nsslibs" \
+        {"tls/$_arch/",tls/,"$_arch/",}"libnss_*.so*"
 
     inst_hook cmdline 90 "$moddir/parse-nfsroot.sh"
     inst_hook pre-udev 99 "$moddir/nfs-start-rpc.sh"
