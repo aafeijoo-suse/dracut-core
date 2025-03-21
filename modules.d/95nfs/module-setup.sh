@@ -19,7 +19,7 @@ get_nfs_type() {
 
 # called by dracut
 check() {
-    require_binaries mount.nfs mount.nfs4 umount sed chmod chown grep || return 1
+    require_binaries mount.nfs mount.nfs4 umount sed chown grep || return 1
 
     [[ $hostonly ]] || [[ $mount_needs ]] && {
         [[ "$(get_nfs_type)" ]] && return 0
@@ -92,7 +92,7 @@ install() {
         "$systemdutildir"/system-generators/rpc-pipefs-generator \
         "$systemdsystemunitdir"/rpc_pipefs.target \
         "$systemdsystemunitdir"/var-lib-nfs-rpc_pipefs.mount \
-        rpc.idmapd mount.nfs mount.nfs4 umount sed chmod chown grep
+        rpc.idmapd mount.nfs mount.nfs4 umount sed chown grep
 
     for _f in {,/usr}/etc/nfs.conf {,/usr}/etc/nfs.conf.d/*.conf; do
         [[ -f $_f ]] || continue
