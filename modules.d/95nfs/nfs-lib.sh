@@ -88,13 +88,17 @@ mount_nfs() {
         return 1
     fi
     munge_nfs_options
+    if [ "$nfsrw" = "ro" ] && [ "$nfslock" = "lock" ]; then
+        warn "mount_nfs: filesystem accessed in read-only mode, ignoring 'lock' option because no locking is needed"
+        nfslock="nolock"
+    fi
     if [ "$nfs" = "nfs4" ]; then
         options=$options${nfslock:+,$nfslock}
     else
         # NFSv{2,3} doesn't support using locks as it requires a helper to
         # transfer the rpcbind state to the new root
         [ "$nfslock" = "lock" ] \
-            && warn "nfs-lib: locks unsupported on NFSv{2,3}, using nolock" 1>&2
+            && warn "mount_nfs: locks unsupported on NFSv{2,3}, using nolock"
         options=$options,nolock
     fi
     mount -t "$nfs" -o"$options" "$server:$path" "$mntdir"
