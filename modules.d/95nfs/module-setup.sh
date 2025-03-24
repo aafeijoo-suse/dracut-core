@@ -30,12 +30,7 @@ check() {
 
 # called by dracut
 depends() {
-    local _deps
-    _deps="network"
-    if ! [[ $hostonly ]] || [[ "$(get_nfs_type)" == "nfs" ]]; then
-        [[ -e "$sysusers"/statd-user.conf ]] && _deps+=" systemd-sysusers"
-    fi
-    echo "$_deps"
+    echo network
     return 0
 }
 
@@ -93,7 +88,6 @@ install() {
         {,/usr}/etc/protocols \
         {,/usr}/etc/rpc \
         {,/usr}/etc/services \
-        "$tmpfilesdir/rpcbind.conf" \
         "$systemdutildir"/system-generators/rpc-pipefs-generator \
         "$systemdsystemunitdir"/rpc_pipefs.target \
         "$systemdsystemunitdir"/var-lib-nfs-rpc_pipefs.mount \
@@ -133,26 +127,33 @@ install() {
     inst "$moddir/nfsroot.sh" "/sbin/nfsroot"
     inst "$moddir/nfs-lib.sh" "/lib/nfs-lib.sh"
 
-    mkdir -m 0755 -p "$initdir/var/lib/nfs"
-    mkdir -m 0755 -p "$initdir/var/lib/nfs/sm"
+    inst_dir "/var/lib/nfs"
 
     # For hostonly, only install rpcbind for NFS < 4
     if ! [[ $hostonly ]] || [[ "$(get_nfs_type)" == "nfs" ]]; then
-        inst_multiple -o rpcbind rpc.statd
+        inst_multiple -o \
+            "$tmpfilesdir"/rpcbind.conf \
+            rpcbind rpc.statd
 
-        mkdir -m 0770 -p "$initdir/var/lib/rpcbind"
-        _rpcuser=$(grep -m1 -E '^nfsnobody:|^rpc:|^rpcuser:' /etc/passwd)
-        if [[ -n "$_rpcuser" ]]; then
-            echo "$_rpcuser" >> "$initdir/etc/passwd"
-            # rpc user needs to be able to write to this directory to save the warmstart file
-            chown "${_rpcuser%%:*}": "$initdir/var/lib/rpcbind"
-            grep -E '^nogroup:|^rpc:|^nobody:' /etc/group >> "$initdir/etc/group"
+        # Add non-standard user/groups (some distros provide their sysusers conf
+        # files, but it's unmanageable to add all the specific cases).
+        grep -E '^_rpc:|^nfsnobody:|^rpc:|^rpcuser:|^statd:' "$dracutsysrootdir"/etc/passwd >> "$initdir/etc/passwd"
+        grep -E '^nobody:|^nogroup:|^rpc:|^statd:' "$dracutsysrootdir"/etc/group >> "$initdir/etc/group"
+
+        # Create fixed rpc.statd state directories in /var/lib/nfs. It can be
+        # configured at build time (--with-statdpath) and and there is
+        # divergence between distros, so we will call rpc.statd with '-P'.
+        if $DRACUT_CP -L --preserve=ownership -t "$initdir"/var/lib/nfs /var/lib/nfs/sm; then
+            rm -rf "$initdir"/var/lib/nfs/sm/*
+        else
+            ddebug "nfs: rpc.statd default monitor directory '/var/lib/nfs/sm' not found."
+            mkdir -m 0700 -p "$initdir"/var/lib/nfs/sm
         fi
-
-        # SUSE specific
-        if [[ -e "$sysusers"/statd-user.conf ]]; then
-            inst_simple "$sysusers"/statd-user.conf
-            inst_simple "$moddir/nfs-tmpfile-dracut.conf" "$tmpfilesdir/nfs-tmpfile-dracut.conf"
+        if $DRACUT_CP -L --preserve=ownership -t "$initdir"/var/lib/nfs /var/lib/nfs/sm.bak; then
+            rm -rf "$initdir"/var/lib/nfs/sm.bak/*
+        else
+            ddebug "nfs: rpc.statd default notify directory '/var/lib/nfs/sm.bak' not found."
+            mkdir -m 0700 -p "$initdir"/var/lib/nfs/sm.bak
         fi
     fi
 
