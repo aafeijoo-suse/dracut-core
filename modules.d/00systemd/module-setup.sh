@@ -46,6 +46,7 @@ install() {
         "$systemdutildir"/systemd-reply-password \
         "$systemdutildir"/systemd-shutdown \
         "$systemdutildir"/systemd-sysroot-fstab-check \
+        "$systemdutildir"/systemd-validatefs \
         "$systemdutildir"/systemd-vconsole-setup \
         "$systemdutildir"/systemd-volatile-root \
         "$systemdsystemunitdir"/-.slice \
@@ -101,6 +102,7 @@ install() {
         "$systemdsystemunitdir"/systemd-kexec.service \
         "$systemdsystemunitdir"/systemd-poweroff.service \
         "$systemdsystemunitdir"/systemd-reboot.service \
+        "$systemdsystemunitdir"/systemd-validatefs@.service \
         "$systemdsystemunitdir"/systemd-vconsole-setup.service \
         "$systemdsystemunitdir"/systemd-volatile-root.service \
         "$systemdsystemunitdir"/timers.target \
