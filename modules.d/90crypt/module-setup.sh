@@ -138,18 +138,29 @@ install() {
                 shift
             done
 
+            entryadded=
             # include the entry regardless
             if [ "${forceentry}" = "yes" ]; then
                 echo "$_mapper $_dev $_luksfile $_luksoptions"
+                entryadded=1
             else
                 # shellcheck disable=SC2031
                 for _hdev in "${!host_fs_types[@]}"; do
                     [[ ${host_fs_types[$_hdev]} == "crypto_LUKS" ]] || continue
                     if [[ $_hdev -ef $_dev ]] || [[ /dev/block/$_hdev -ef $_dev ]]; then
                         echo "$_mapper $_dev $_luksfile $_luksoptions"
+                        entryadded=1
                         break
                     fi
                 done
+            fi
+
+            if [[ $entryadded ]]; then
+                if [[ -f $_luksfile ]]; then
+                    inst -H -o "$_luksfile"
+                elif [[ $_luksfile == "none" ]] || [[ $_luksfile == "-" ]]; then
+                    inst -H -o "/etc/cryptsetup-keys.d/${_mapper}.key"
+                fi
             fi
         done < /etc/crypttab > "$initdir"/etc/crypttab
         mark_hostonly /etc/crypttab
