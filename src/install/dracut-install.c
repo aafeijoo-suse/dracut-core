@@ -1840,6 +1840,10 @@ static int install_modules(int argc, char **argv)
         int modinst = 0;
 
         ctx = kmod_new(kerneldir, NULL);
+        if (!ctx)
+                return -ENXIO;
+        if (arg_loglevel >= 0)
+                kmod_set_log_priority(ctx, arg_loglevel);
         abskpath = kmod_get_dirname(ctx);
 
         p = strstr(abskpath, "/lib/modules/");
@@ -2107,6 +2111,12 @@ int main(int argc, char **argv)
                 char *name;
                 _cleanup_kmod_unref_ struct kmod_ctx *ctx = NULL;
                 ctx = kmod_new(kerneldir, NULL);
+                if (!ctx) {
+                        r = -ENXIO;
+                        goto finish2;
+                }
+                if (arg_loglevel >= 0)
+                        kmod_set_log_priority(ctx, arg_loglevel);
 
                 modalias_list(ctx);
                 HASHMAP_FOREACH(name, modules_loaded, i) {
