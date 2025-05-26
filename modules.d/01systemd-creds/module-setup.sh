@@ -33,6 +33,9 @@ install() {
     inst_multiple -o \
         "/usr/lib/credstore/*" \
         "/usr/lib/credstore.encrypted/*" \
+        "$systemdsystemunitdir"/systemd-creds.socket \
+        "$systemdsystemunitdir"/systemd-creds@.service \
+        "$systemdsystemunitdir"/sockets.target.wants/systemd-creds.socket \
         "$tmpfilesdir/credstore.conf" \
         systemd-creds
 
@@ -40,7 +43,12 @@ install() {
     if [[ $hostonly ]]; then
         inst_multiple -H -o \
             "/etc/credstore/*" \
-            "/etc/credstore.encrypted/*"
+            "/etc/credstore.encrypted/*" \
+            "$systemdsystemconfdir"/systemd-creds.socket \
+            "$systemdsystemconfdir/systemd-creds.socket.d/*.conf" \
+            "$systemdsystemconfdir"/systemd-creds@.service \
+            "$systemdsystemconfdir/systemd-creds@.service.d/*.conf" \
+            "$systemdsystemconfdir"/sockets.target.wants/systemd-creds.socket
     fi
 
 }
