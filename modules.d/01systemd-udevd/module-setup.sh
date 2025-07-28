@@ -68,6 +68,7 @@ install() {
         "$udevrulesdir"/80-drivers.rules \
         "$udevrulesdir"/80-net-setup-link.rules \
         "$udevrulesdir"/81-net-dhcp.rules \
+        "$udevrulesdir"/90-image-dissect.rules \
         "$udevrulesdir"/90-vconsole.rules \
         "$udevrulesdir"/99-systemd.rules \
         "$systemdutildir"/systemd-udevd \
