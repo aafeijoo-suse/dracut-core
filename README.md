@@ -34,6 +34,6 @@ $ dnf config-manager --add-repo https://download.opensuse.org/repositories/home:
 $ dnf install dracut-core --repo home_afeijoo_devel_fedora --best --allowerasing
 ```
 
-- for Fedora 40: `s/Fedora_Rawhide/Fedora_40/`
+- for Fedora 42: `s/Fedora_Rawhide/Fedora_42/`
 
 Licensed under the GPLv2
